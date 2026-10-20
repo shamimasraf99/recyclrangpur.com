@@ -1,0 +1,49 @@
+# ============================================================================
+# Systemd Service Unit for BikroyBD API Gateway
+# Target Path: /etc/systemd/system/bikroybd-api.service
+# Commands:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now bikroybd-api
+#   sudo systemctl status bikroybd-api
+# ============================================================================
+
+[Unit]
+Description=BikroyBD Marketplace Express API Gateway
+Documentation=https://bikroybd.com/docs/PHASE_7_PRODUCTION_DEPLOYMENT_GUIDE.md
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=bikroybd
+Group=bikroybd
+WorkingDirectory=/var/www/bikroybd/current
+
+# Secrets loaded strictly from root/bikroybd-owned file outside the Git repository
+EnvironmentFile=/etc/bikroybd/api.env
+Environment=NODE_ENV=production
+
+ExecStart=/usr/bin/node /var/www/bikroybd/current/server/dist/index.js
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGTERM
+TimeoutStopSec=15
+
+# Automatic Restart Strategy
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# OS-Level Sandboxing & Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/bikroybd
+
+StandardOutput=append:/var/log/bikroybd/api-out.log
+StandardError=append:/var/log/bikroybd/api-error.log
+SyslogIdentifier=bikroybd-api
+
+[Install]
+WantedBy=multi-user.target

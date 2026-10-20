@@ -1,0 +1,24 @@
+# ============================================================================
+# Linux Logrotate Configuration for BikroyBD API & Nginx Logs
+# Target Path: /etc/logrotate.d/bikroybd
+# Verify:      sudo logrotate -d /etc/logrotate.d/bikroybd
+# ============================================================================
+
+/var/log/bikroybd/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 bikroybd adm
+    sharedscripts
+    postrotate
+        if [ -f /var/run/nginx.pid ]; then
+            kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+        fi
+        if command -v pm2 >/dev/null 2>&1; then
+            su - bikroybd -c "pm2 reloadLogs" >/dev/null 2>&1 || true
+        fi
+    endscript
+}

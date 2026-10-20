@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "BikroyBD",
+    "tagline": "Trusted Marketplace for Used Products in Bangladesh",
+    "currency": "৳",
+    "search": "Search products...",
+    "allCategories": "All Categories",
+    "allLocations": "All of Bangladesh",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "postAd": "Post Ad",
+    "myAccount": "My Account",
+    "wishlist": "Wishlist",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "empty": "No items found",
+    "negotiable": "Negotiable",
+    "fixed": "Fixed Price",
+    "viewDetails": "View Details",
+    "contactSeller": "Contact Seller",
+    "call": "Call Seller",
+    "whatsapp": "Chat on WhatsApp",
+    "filter": "Filter",
+    "sort": "Sort By",
+    "clearAll": "Clear All",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "condition": {
+    "like_new": "Like New",
+    "good": "Good",
+    "fair": "Fair",
+    "for_parts": "For Parts"
+  },
+  "status": {
+    "available": "Available",
+    "reserved": "Reserved",
+    "sold": "Sold",
+    "pending": "Pending Review",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "sortOptions": {
+    "newest": "Newest First",
+    "price_low_high": "Price: Low to High",
+    "price_high_low": "Price: High to Low",
+    "most_viewed": "Most Viewed"
+  },
+  "adPost": {
+    "title": "Post Your Ad",
+    "categoryStep": "Select Category",
+    "detailsStep": "Product Details",
+    "locationStep": "Location & Address",
+    "imagesStep": "Upload Images (Max 5)",
+    "pricePlaceholder": "Price in BDT",
+    "phonePlaceholder": "Contact Phone Number (01XXXXXXXXX)",
+    "hidePhone": "Hide phone number",
+    "allowWhatsapp": "Allow contact via WhatsApp"
+  }
+}

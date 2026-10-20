@@ -1,0 +1,10 @@
+{
+  "name": "bikroybd-shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared Zod validation schemas and TypeScript contracts for BikroyBD",
+  "main": "types/index.ts",
+  "scripts": {
+    "build": "node ../scripts/build_production.js --scope=shared"
+  }
+}

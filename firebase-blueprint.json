@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "Listing": {
+      "collection": "listings",
+      "fields": {
+        "userId": { "type": "string" },
+        "titleBn": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "priceBdt": { "type": "number" },
+        "condition": { "type": "string" },
+        "locationBn": { "type": "string" },
+        "locationEn": { "type": "string" },
+        "districtBn": { "type": "string" },
+        "districtEn": { "type": "string" },
+        "areaIndex": { "type": "number" },
+        "categoryId": { "type": "number" },
+        "isNegotiable": { "type": "boolean" },
+        "sellerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "descriptionBn": { "type": "string" },
+        "descriptionEn": { "type": "string" },
+        "photoPresetIds": { "type": "array" },
+        "photoCaptions": { "type": "array" },
+        "photoUris": { "type": "array" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    },
+    "SavedItem": {
+      "collection": "saved_items",
+      "fields": {
+        "userId": { "type": "string" },
+        "productId": { "type": "number" },
+        "titleBn": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "priceBdt": { "type": "number" },
+        "districtBn": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    }
+  }
+}

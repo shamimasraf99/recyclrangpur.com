@@ -1,0 +1,190 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable hardened global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation helper for Listing entity
+    function isValidListing(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.titleBn is string &&
+             data.titleBn.size() >= 3 &&
+             data.titleBn.size() <= 120 &&
+             data.titleEn is string &&
+             data.titleEn.size() >= 3 &&
+             data.titleEn.size() <= 120 &&
+             data.priceBdt is int &&
+             data.priceBdt > 0 &&
+             data.priceBdt <= 100000000 &&
+             data.condition is string &&
+             data.condition.size() >= 1 &&
+             data.condition.size() <= 40 &&
+             data.locationBn is string &&
+             data.locationBn.size() >= 2 &&
+             data.locationBn.size() <= 120 &&
+             data.locationEn is string &&
+             data.locationEn.size() >= 2 &&
+             data.locationEn.size() <= 120 &&
+             data.districtBn is string &&
+             data.districtBn.size() >= 2 &&
+             data.districtBn.size() <= 80 &&
+             data.districtEn is string &&
+             data.districtEn.size() >= 2 &&
+             data.districtEn.size() <= 80 &&
+             data.areaIndex is int &&
+             data.areaIndex >= 0 &&
+             data.areaIndex <= 20 &&
+             data.categoryId is int &&
+             data.categoryId >= 1 &&
+             data.categoryId <= 10 &&
+             data.isNegotiable is bool &&
+             data.sellerName is string &&
+             data.sellerName.size() >= 2 &&
+             data.sellerName.size() <= 80 &&
+             data.phone is string &&
+             data.phone.size() >= 6 &&
+             data.phone.size() <= 20 &&
+             data.descriptionBn is string &&
+             data.descriptionBn.size() >= 1 &&
+             data.descriptionBn.size() <= 1000 &&
+             data.descriptionEn is string &&
+             data.descriptionEn.size() >= 1 &&
+             data.descriptionEn.size() <= 1000 &&
+             data.photoPresetIds is list &&
+             data.photoPresetIds.size() >= 1 &&
+             data.photoPresetIds.size() <= 5 &&
+             data.photoPresetIds[0] is int &&
+             data.photoCaptions is list &&
+             data.photoCaptions.size() >= 1 &&
+             data.photoCaptions.size() <= 5 &&
+             data.photoCaptions[0] is string &&
+             data.photoCaptions[0].size() <= 120 &&
+             data.photoUris is list &&
+             data.photoUris.size() <= 5 &&
+             (data.photoUris.size() == 0 || (data.photoUris[0] is string && data.photoUris[0].size() <= 500)) &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // Validation helper for SavedItem entity
+    function isValidSavedItem(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.productId is int &&
+             data.productId >= 1 &&
+             data.titleBn is string &&
+             data.titleBn.size() >= 1 &&
+             data.titleBn.size() <= 120 &&
+             data.titleEn is string &&
+             data.titleEn.size() >= 1 &&
+             data.titleEn.size() <= 120 &&
+             data.priceBdt is int &&
+             data.priceBdt >= 0 &&
+             data.priceBdt <= 100000000 &&
+             data.districtBn is string &&
+             data.districtBn.size() >= 1 &&
+             data.districtBn.size() <= 80 &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    match /listings/{listingId} {
+      allow get: if isSignedIn() && isValidId(listingId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(listingId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'titleBn', 'titleEn', 'priceBdt', 'condition',
+                         'locationBn', 'locationEn', 'districtBn', 'districtEn',
+                         'areaIndex', 'categoryId', 'isNegotiable', 'sellerName',
+                         'phone', 'descriptionBn', 'descriptionEn', 'photoPresetIds',
+                         'photoCaptions', 'photoUris', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'titleBn', 'titleEn', 'priceBdt', 'condition',
+                         'locationBn', 'locationEn', 'districtBn', 'districtEn',
+                         'areaIndex', 'categoryId', 'isNegotiable', 'sellerName',
+                         'phone', 'descriptionBn', 'descriptionEn', 'photoPresetIds',
+                         'photoCaptions', 'photoUris', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidListing(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(listingId) &&
+                       isValidListing(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'titleBn', 'titleEn', 'priceBdt', 'condition',
+                         'locationBn', 'locationEn', 'districtBn', 'districtEn',
+                         'areaIndex', 'categoryId', 'isNegotiable', 'sellerName',
+                         'phone', 'descriptionBn', 'descriptionEn', 'photoPresetIds',
+                         'photoCaptions', 'photoUris', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(listingId) && existing().userId == request.auth.uid;
+    }
+
+    match /saved_items/{savedId} {
+      allow get: if isSignedIn() && isValidId(savedId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(savedId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'productId', 'titleBn', 'titleEn',
+                         'priceBdt', 'districtBn', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'productId', 'titleBn', 'titleEn',
+                         'priceBdt', 'districtBn', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidSavedItem(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(savedId) &&
+                       isValidSavedItem(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().productId == existing().productId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'titleBn', 'titleEn', 'priceBdt', 'districtBn', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(savedId) && existing().userId == request.auth.uid;
+    }
+  }
+}

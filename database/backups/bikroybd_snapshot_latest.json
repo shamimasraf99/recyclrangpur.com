@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "checksum": "d41aec2ee37c2a098a0f481aab96ccac0ed40d558d637c4f316b9d435c1ed8e5",
+  "payload": {
+    "database": "codedemo_shop",
+    "mode": "schema_and_seed_snapshot",
+    "createdAt": "2026-10-18T14:57:22.002Z",
+    "orderedTables": [
+      "roles",
+      "permissions",
+      "role_permissions",
+      "locations_divisions",
+      "locations_districts",
+      "locations_upazilas",
+      "categories",
+      "subcategories",
+      "users",
+      "user_roles",
+      "user_sessions",
+      "products",
+      "product_images",
+      "wishlists",
+      "seller_contacts",
+      "reports",
+      "notifications",
+      "banners",
+      "settings",
+      "audit_logs"
+    ],
+    "migrations": [
+      "001_create_roles_and_permissions.sql",
+      "002_create_users_and_sessions.sql",
+      "003_create_locations_hierarchy.sql",
+      "004_create_categories_and_subcategories.sql",
+      "005_create_products_and_images.sql",
+      "006_create_wishlists_and_contacts.sql",
+      "007_create_reports_and_moderation.sql",
+      "008_create_notifications_banners_settings_audit.sql",
+      "009_production_indexes_and_schema_hardening.sql"
+    ],
+    "seeds": [
+      "001_seed_initial_data.sql"
+    ],
+    "tablesCount": 20,
+    "indexesCount": 23
+  }
+}

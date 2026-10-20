@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center circular glow -->
+    <path
+        android:fillColor="#22C55E"
+        android:pathData="M54,28 C68.36,28 80,39.64 80,54 C80,68.36 68.36,80 54,80 C39.64,80 28,68.36 28,54 C28,39.64 39.64,28 54,28 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,34 C65.05,34 74,42.95 74,54 C74,65.05 65.05,74 54,74 C42.95,74 34,65.05 34,54 C34,42.95 42.95,34 54,34 Z" />
+    <!-- Recycle arrows & Shopping Tag icon -->
+    <path
+        android:fillColor="#0D5C3A"
+        android:pathData="M54,42 C47.37,42 42,47.37 42,54 C42,56.65 42.86,59.1 44.31,61.09 L41.5,63.9 C39.33,61.2 38,57.75 38,54 C38,45.16 45.16,38 54,38 L54,33 L62,40 L54,47 Z" />
+    <path
+        android:fillColor="#15803D"
+        android:pathData="M54,66 C60.63,66 66,60.63 66,54 C66,51.35 65.14,48.9 63.69,46.91 L66.5,44.1 C68.67,46.8 70,50.25 70,54 C70,62.84 62.84,70 54,70 L54,75 L46,68 L54,61 Z" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M54,49 C56.76,49 59,51.24 59,54 C59,56.76 56.76,59 54,59 C51.24,59 49,56.76 49,54 C49,51.24 51.24,49 54,49 Z" />
+</vector>
