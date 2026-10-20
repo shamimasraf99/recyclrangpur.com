@@ -422,8 +422,8 @@ fun RecyclRangpurAuthModal(
   isOpen: Boolean,
   isBangla: Boolean,
   authManager: GoogleAuthManager,
-  titleText: String = if (isBangla) "বিজ্ঞাপন দিতে লগইন করুন" else "Sign In to Post an Ad",
-  subtitleText: String = if (isBangla) "অতিথি হিসেবে বিজ্ঞাপন দেখা যাবে, তবে বিজ্ঞাপন পোস্ট ও বিক্রেতার সাথে চ্যাটের জন্য লগইন প্রয়োজন।" else "Guests can browse all ads freely. Login is required to post ads.",
+  titleText: String = if (isBangla) "লগইন করুন" else "Sign In",
+  subtitleText: String = if (isBangla) "বিজ্ঞাপন দিতে আপনার অ্যাকাউন্টে প্রবেশ করুন" else "Sign in to post and manage your ads",
   onSuccess: (AuthenticatedUser) -> Unit,
   onDismiss: () -> Unit
 ) {
@@ -432,7 +432,6 @@ fun RecyclRangpurAuthModal(
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
 
-  var selectedTab by remember { mutableIntStateOf(0) } // 0: Google, 1: Email/Password
   var isSignUpMode by remember { mutableStateOf(false) }
 
   var emailInput by remember { mutableStateOf("") }
@@ -443,7 +442,6 @@ fun RecyclRangpurAuthModal(
 
   var isLoading by remember { mutableStateOf(false) }
   var errorMessage by remember { mutableStateOf<String?>(null) }
-  var successMessage by remember { mutableStateOf<String?>(null) }
 
   Dialog(
     onDismissRequest = onDismiss,
@@ -451,20 +449,21 @@ fun RecyclRangpurAuthModal(
   ) {
     Card(
       modifier = Modifier
+        .widthIn(max = 420.dp)
         .fillMaxWidth(0.92f)
         .wrapContentHeight()
-        .shadow(12.dp, RoundedCornerShape(24.dp))
-        .clip(RoundedCornerShape(24.dp))
+        .shadow(8.dp, RoundedCornerShape(22.dp))
+        .clip(RoundedCornerShape(22.dp))
         .testTag("recycl_auth_modal"),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
       Column(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(22.dp),
+          .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        // Close button & Header
+        // Top row: App title + close button
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -476,20 +475,24 @@ fun RecyclRangpurAuthModal(
           ) {
             Box(
               modifier = Modifier
-                .size(36.dp)
+                .size(34.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer),
               contentAlignment = Alignment.Center
             ) {
               Icon(
-                imageVector = Icons.Default.Lock,
+                imageVector = Icons.Default.Autorenew,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
               )
             }
             Text(
-              text = if (isBangla) "অ্যাকাউন্ট ভেরিফিকেশন" else "Account Verification",
+              text = if (isSignUpMode) {
+                if (isBangla) "নতুন অ্যাকাউন্ট তৈরি" else "Create Account"
+              } else {
+                if (isBangla) "স্বাগতম - লগইন" else "Sign In"
+              },
               style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
@@ -502,419 +505,238 @@ fun RecyclRangpurAuthModal(
           }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-          text = titleText,
-          style = MaterialTheme.typography.titleLarge.copy(
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-          ),
-          color = MaterialTheme.colorScheme.primary,
-          textAlign = TextAlign.Center
-        )
-
-        Text(
-          text = subtitleText,
-          style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-          textAlign = TextAlign.Center,
-          modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
-        )
-
-        // Tab Selector (Google Sign-In vs Email/Password)
-        TabRow(
-          selectedTabIndex = selectedTab,
+        // 1. Google One-Tap Sign In Button
+        OutlinedButton(
+          onClick = {
+            val act = context as? Activity ?: return@OutlinedButton
+            isLoading = true
+            errorMessage = null
+            coroutineScope.launch {
+              val res = authManager.signInWithGoogle(act)
+              isLoading = false
+              if (res.isSuccess) {
+                onSuccess(res.getOrThrow())
+                onDismiss()
+              } else {
+                errorMessage = res.exceptionOrNull()?.localizedMessage ?: "Google Sign-In ব্যর্থ হয়েছে"
+              }
+            }
+          },
+          enabled = !isLoading,
           modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .height(48.dp)
+            .testTag("google_signin_button"),
+          shape = RoundedCornerShape(12.dp)
         ) {
-          Tab(
-            selected = selectedTab == 0,
-            onClick = {
-              selectedTab = 0
-              errorMessage = null
-            },
-            text = {
-              Text(
-                text = if (isBangla) "গুগল সাইন-ইন" else "Google Sign-In",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-              )
-            },
-            icon = {
-              Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-            }
-          )
-          Tab(
-            selected = selectedTab == 1,
-            onClick = {
-              selectedTab = 1
-              errorMessage = null
-            },
-            text = {
-              Text(
-                text = if (isBangla) "ইমেইল ও পাসওয়ার্ড" else "Email & Password",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-              )
-            },
-            icon = {
-              Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
-            }
-          )
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // TAB 0: Google Sign-In
-        if (selectedTab == 0) {
-          Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Button(
-              onClick = {
-                val act = context as? Activity ?: return@Button
-                isLoading = true
-                errorMessage = null
-                coroutineScope.launch {
-                  val res = authManager.signInWithGoogle(act)
-                  isLoading = false
-                  if (res.isSuccess) {
-                    val user = res.getOrThrow()
-                    successMessage = if (isBangla) "স্বাগতম, ${user.displayName}!" else "Welcome, ${user.displayName}!"
-                    delay(400)
-                    onSuccess(user)
-                    onDismiss()
-                  } else {
-                    errorMessage = res.exceptionOrNull()?.localizedMessage ?: "Google Sign-In ব্যর্থ হয়েছে"
-                  }
-                }
-              },
-              enabled = !isLoading,
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .testTag("google_signin_button"),
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-              )
-            ) {
-              if (isLoading) {
-                CircularProgressIndicator(
-                  modifier = Modifier.size(24.dp),
-                  color = MaterialTheme.colorScheme.onPrimary,
-                  strokeWidth = 2.dp
-                )
-              } else {
-                Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                  Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(22.dp)
-                  )
-                  Text(
-                    text = if (isBangla) "গুগল অ্যাকাউন্ট দিয়ে চালিয়ে যান" else "Continue with Google",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                  )
-                }
-              }
-            }
-
-            Text(
-              text = if (isBangla) "এক ক্লিকেই নিরাপদ গুগল সাইন-ইন সম্পন্ন করুন" else "Fast and secure sign-in with your Google Account",
-              style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-              color = MaterialTheme.colorScheme.outline,
-              modifier = Modifier.padding(top = 10.dp)
-            )
-          }
-        }
-
-        // TAB 1: Email & Password (Login or Sign-Up)
-        if (selectedTab == 1) {
-          Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            // Mode Switch (Login vs SignUp)
+          if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+          } else {
             Row(
-              modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(4.dp),
-              horizontalArrangement = Arrangement.SpaceEvenly
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-              Surface(
-                modifier = Modifier
-                  .weight(1f)
-                  .clickable {
-                    isSignUpMode = false
-                    errorMessage = null
-                  },
-                shape = RoundedCornerShape(8.dp),
-                color = if (!isSignUpMode) MaterialTheme.colorScheme.surface else Color.Transparent
-              ) {
-                Text(
-                  text = if (isBangla) "লগইন" else "Login",
-                  fontWeight = if (!isSignUpMode) FontWeight.Bold else FontWeight.Medium,
-                  fontSize = 14.sp,
-                  textAlign = TextAlign.Center,
-                  color = if (!isSignUpMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                  modifier = Modifier.padding(vertical = 8.dp)
-                )
-              }
-
-              Surface(
-                modifier = Modifier
-                  .weight(1f)
-                  .clickable {
-                    isSignUpMode = true
-                    errorMessage = null
-                  },
-                shape = RoundedCornerShape(8.dp),
-                color = if (isSignUpMode) MaterialTheme.colorScheme.surface else Color.Transparent
-              ) {
-                Text(
-                  text = if (isBangla) "নতুন একাউন্ট (সাইন আপ)" else "Sign Up",
-                  fontWeight = if (isSignUpMode) FontWeight.Bold else FontWeight.Medium,
-                  fontSize = 14.sp,
-                  textAlign = TextAlign.Center,
-                  color = if (isSignUpMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                  modifier = Modifier.padding(vertical = 8.dp)
-                )
-              }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Extra fields for Sign Up
-            AnimatedVisibility(visible = isSignUpMode) {
-              Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                  value = nameInput,
-                  onValueChange = { nameInput = it },
-                  label = { Text(if (isBangla) "আপনার পূর্ণ নাম" else "Full Name", fontSize = 14.sp) },
-                  leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("auth_name_input"),
-                  shape = RoundedCornerShape(12.dp),
-                  singleLine = true
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                  value = phoneInput,
-                  onValueChange = { phoneInput = it },
-                  label = { Text(if (isBangla) "রংপুরের মোবাইল নম্বর" else "Phone Number", fontSize = 14.sp) },
-                  leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                  keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("auth_phone_input"),
-                  shape = RoundedCornerShape(12.dp),
-                  singleLine = true
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-              }
-            }
-
-            // Email Field
-            OutlinedTextField(
-              value = emailInput,
-              onValueChange = { emailInput = it },
-              label = { Text(if (isBangla) "ইমেইল ঠিকানা" else "Email Address", fontSize = 14.sp) },
-              leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-              modifier = Modifier
-                .fillMaxWidth()
-                .testTag("auth_email_input"),
-              shape = RoundedCornerShape(12.dp),
-              singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Password Field
-            OutlinedTextField(
-              value = passwordInput,
-              onValueChange = { passwordInput = it },
-              label = { Text(if (isBangla) "পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" else "Password (min 6 chars)", fontSize = 14.sp) },
-              leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-              trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                  Icon(
-                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                    contentDescription = "পাসওয়ার্ড দেখুন"
-                  )
-                }
-              },
-              visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-              modifier = Modifier
-                .fillMaxWidth()
-                .testTag("auth_password_input"),
-              shape = RoundedCornerShape(12.dp),
-              singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Action Button
-            Button(
-              onClick = {
-                errorMessage = null
-                isLoading = true
-                if (isSignUpMode) {
-                  val res = authManager.registerWithEmail(
-                    name = nameInput,
-                    email = emailInput,
-                    pass = passwordInput,
-                    phone = phoneInput
-                  )
-                  isLoading = false
-                  if (res.isSuccess) {
-                    val user = res.getOrThrow()
-                    successMessage = if (isBangla) "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!" else "Account created successfully!"
-                    onSuccess(user)
-                    onDismiss()
-                  } else {
-                    errorMessage = res.exceptionOrNull()?.localizedMessage ?: "সাইন আপ ব্যর্থ হয়েছে"
-                  }
-                } else {
-                  val res = authManager.loginWithEmail(
-                    email = emailInput,
-                    pass = passwordInput
-                  )
-                  isLoading = false
-                  if (res.isSuccess) {
-                    val user = res.getOrThrow()
-                    successMessage = if (isBangla) "লগইন সফল হয়েছে!" else "Logged in successfully!"
-                    onSuccess(user)
-                    onDismiss()
-                  } else {
-                    errorMessage = res.exceptionOrNull()?.localizedMessage ?: "লগইন ব্যর্থ হয়েছে"
-                  }
-                }
-              },
-              enabled = !isLoading && emailInput.isNotBlank() && passwordInput.isNotBlank(),
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .testTag("email_auth_submit_button"),
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+              Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
               )
-            ) {
-              if (isLoading) {
-                CircularProgressIndicator(
-                  modifier = Modifier.size(24.dp),
-                  color = MaterialTheme.colorScheme.onPrimary,
-                  strokeWidth = 2.dp
-                )
-              } else {
-                Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                  Icon(
-                    imageVector = if (isSignUpMode) Icons.Default.PersonAdd else Icons.AutoMirrored.Filled.Login,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                  )
-                  Text(
-                    text = if (isSignUpMode) {
-                      if (isBangla) "সাইন আপ সম্পন্ন করুন" else "Create Account"
-                    } else {
-                      if (isBangla) "লগইন করুন" else "Log In"
-                    },
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                  )
-                }
-              }
+              Text(
+                text = if (isBangla) "Google দিয়ে চালিয়ে যান" else "Continue with Google",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurface
+              )
             }
           }
         }
 
-        // Error message presentation
+        // 2. Minimal Divider "অথবা"
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 14.dp),
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+          Text(
+            text = if (isBangla) "অথবা ইমেইল দিয়ে" else "or with email",
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(horizontal = 10.dp)
+          )
+          HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+        }
+
+        // 3. Email & Password Form Fields
+        AnimatedVisibility(visible = isSignUpMode) {
+          Column(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+              value = nameInput,
+              onValueChange = { nameInput = it },
+              label = { Text(if (isBangla) "নাম" else "Full Name", fontSize = 13.sp) },
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("auth_name_input"),
+              shape = RoundedCornerShape(10.dp),
+              singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+              value = phoneInput,
+              onValueChange = { phoneInput = it },
+              label = { Text(if (isBangla) "মোবাইল নম্বর" else "Phone Number", fontSize = 13.sp) },
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("auth_phone_input"),
+              shape = RoundedCornerShape(10.dp),
+              singleLine = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+          }
+        }
+
+        OutlinedTextField(
+          value = emailInput,
+          onValueChange = { emailInput = it },
+          label = { Text(if (isBangla) "ইমেইল ঠিকানা" else "Email Address", fontSize = 13.sp) },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("auth_email_input"),
+          shape = RoundedCornerShape(10.dp),
+          singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+          value = passwordInput,
+          onValueChange = { passwordInput = it },
+          label = { Text(if (isBangla) "পাসওয়ার্ড" else "Password", fontSize = 13.sp) },
+          trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+              Icon(
+                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                contentDescription = null
+              )
+            }
+          },
+          visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("auth_password_input"),
+          shape = RoundedCornerShape(10.dp),
+          singleLine = true
+        )
+
         errorMessage?.let { err ->
-          Surface(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(top = 12.dp),
-            color = MaterialTheme.colorScheme.errorContainer,
-            shape = RoundedCornerShape(10.dp)
-          ) {
-            Row(
-              modifier = Modifier.padding(10.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(18.dp)
-              )
-              Text(
-                text = err,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                color = MaterialTheme.colorScheme.onErrorContainer
-              )
-            }
-          }
-        }
-
-        // Success message presentation
-        successMessage?.let { succ ->
-          Surface(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(top = 12.dp),
-            color = Color(0xFFDCFCE7),
-            shape = RoundedCornerShape(10.dp)
-          ) {
-            Row(
-              modifier = Modifier.padding(10.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = Color(0xFF16A34A),
-                modifier = Modifier.size(18.dp)
-              )
-              Text(
-                text = succ,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                color = Color(0xFF166534)
-              )
-            }
-          }
+          Text(
+            text = err,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+            modifier = Modifier.padding(top = 8.dp)
+          )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Guest continue dismissal option
+        // 4. Primary Submit Button
+        Button(
+          onClick = {
+            errorMessage = null
+            isLoading = true
+            if (isSignUpMode) {
+              val res = authManager.registerWithEmail(nameInput, emailInput, passwordInput, phoneInput)
+              isLoading = false
+              if (res.isSuccess) {
+                onSuccess(res.getOrThrow())
+                onDismiss()
+              } else {
+                errorMessage = res.exceptionOrNull()?.localizedMessage ?: "সাইন আপ ব্যর্থ হয়েছে"
+              }
+            } else {
+              val res = authManager.loginWithEmail(emailInput, passwordInput)
+              isLoading = false
+              if (res.isSuccess) {
+                onSuccess(res.getOrThrow())
+                onDismiss()
+              } else {
+                errorMessage = res.exceptionOrNull()?.localizedMessage ?: "লগইন ব্যর্থ হয়েছে"
+              }
+            }
+          },
+          enabled = !isLoading && emailInput.isNotBlank() && passwordInput.isNotBlank(),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .testTag("email_auth_submit_button"),
+          shape = RoundedCornerShape(12.dp),
+          colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+          if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+          } else {
+            Text(
+              text = if (isSignUpMode) {
+                if (isBangla) "অ্যাকাউন্ট তৈরি করুন" else "Create Account"
+              } else {
+                if (isBangla) "লগইন করুন" else "Sign In"
+              },
+              fontWeight = FontWeight.Bold,
+              fontSize = 15.sp
+            )
+          }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 5. Toggle Login / Sign Up
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.Center
+        ) {
+          Text(
+            text = if (isSignUpMode) {
+              if (isBangla) "আগে থেকেই অ্যাকাউন্ট আছে? " else "Already have an account? "
+            } else {
+              if (isBangla) "নতুন ব্যবহারকারী? " else "Don't have an account? "
+            },
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
+          Text(
+            text = if (isSignUpMode) {
+              if (isBangla) "লগইন করুন" else "Sign In"
+            } else {
+              if (isBangla) "সাইন আপ" else "Sign Up"
+            },
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+              .clickable {
+                isSignUpMode = !isSignUpMode
+                errorMessage = null
+              }
+              .padding(4.dp)
+          )
+        }
+
+        // 6. Guest Option
         TextButton(
           onClick = onDismiss,
           modifier = Modifier.testTag("dismiss_auth_modal_button")
         ) {
           Text(
-            text = if (isBangla) "অতিথি হিসেবে ব্রাউজ করুন" else "Continue Browsing as Guest",
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
+            text = if (isBangla) "গেস্ট হিসেবে দেখুন" else "Continue as Guest",
+            fontSize = 13.sp,
             color = MaterialTheme.colorScheme.outline
           )
         }

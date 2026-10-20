@@ -1,6 +1,7 @@
 package com.example
 
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 
 enum class OperationType {
   CREATE,
@@ -15,6 +16,10 @@ fun handleFirestoreError(
   operationType: OperationType,
   path: String
 ) {
+  if (exception is CancellationException || exception.javaClass.simpleName == "CancellationException") {
+    // Normal coroutine cancellation when lifecycle changes or scope ends - not an error
+    return
+  }
   val diagnostic = """
     {
       "event": "firestore_error",

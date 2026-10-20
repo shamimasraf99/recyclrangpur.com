@@ -11,6 +11,23 @@ val CATEGORIES = listOf(
   "আসবাবপত্র ও অন্যান্য" to "Furniture & Living"
 )
 
+data class BikroyCategoryItem(
+  val id: Int,
+  val nameBn: String,
+  val nameEn: String,
+  val iconType: String,
+  val accentColor: Long
+)
+
+val BIKROY_CATEGORY_LIST = listOf(
+  BikroyCategoryItem(0, "সব ক্যাটাগরি", "All Categories", "all", 0xFF007A64),
+  BikroyCategoryItem(1, "মোবাইল ও ফোন", "Phones & Gadgets", "phone", 0xFF2563EB),
+  BikroyCategoryItem(2, "কম্পিউটার", "Laptops & PCs", "laptop", 0xFF7C3AED),
+  BikroyCategoryItem(3, "বাইক ও মোটর", "Bikes & Motors", "bike", 0xFFEA580C),
+  BikroyCategoryItem(4, "টিভি ও হোম", "TV & Appliances", "tv", 0xFFDC2626),
+  BikroyCategoryItem(5, "আসবাবপত্র", "Furniture", "furniture", 0xFF059669)
+)
+
 // Exclusively Rangpur City (রংপুর সিটি কর্পোরেশন এলাকা)
 val RANGPUR_CITY_AREAS = listOf(
   "পুরো রংপুর শহর" to "All Rangpur City",

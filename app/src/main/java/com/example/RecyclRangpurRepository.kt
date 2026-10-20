@@ -116,6 +116,10 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
   }
 
   fun observeUserListings(userId: String = requireUserId()): Flow<List<FirestoreListing>> = flow {
+    if (userId.isBlank() || userId == "guest_user") {
+      emit(emptyList())
+      return@flow
+    }
     val path = "listings"
     emitAll(
       db.collection(path)
@@ -130,6 +134,9 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
           }
         }
         .catch { error ->
+          if (error is CancellationException) {
+            throw error
+          }
           if (error is Exception) {
             handleFirestoreError(error, OperationType.LIST, path)
           }
@@ -139,6 +146,10 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
   }
 
   fun observeSavedItems(userId: String = requireUserId()): Flow<List<SavedWishlistItem>> = flow {
+    if (userId.isBlank() || userId == "guest_user") {
+      emit(emptyList())
+      return@flow
+    }
     val path = "saved_items"
     emitAll(
       db.collection(path)
@@ -153,6 +164,9 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
           }
         }
         .catch { error ->
+          if (error is CancellationException) {
+            throw error
+          }
           if (error is Exception) {
             handleFirestoreError(error, OperationType.LIST, path)
           }
