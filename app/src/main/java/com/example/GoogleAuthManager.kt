@@ -12,6 +12,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -338,54 +340,39 @@ fun RecyclRangpurPreloader(
       verticalArrangement = Arrangement.Center,
       modifier = Modifier.padding(32.dp)
     ) {
-      // Spinning recycling badge
+      // Brand Logo with elegant rounded styling and soft shadow
       Box(
         modifier = Modifier
-          .size(90.dp)
-          .rotate(rotation),
+          .size(96.dp)
+          .shadow(6.dp, RoundedCornerShape(20.dp))
+          .clip(RoundedCornerShape(20.dp))
+          .background(Color.White),
         contentAlignment = Alignment.Center
       ) {
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .border(
-              width = 4.dp,
-              brush = Brush.sweepGradient(
-                listOf(
-                  MaterialTheme.colorScheme.primary,
-                  MaterialTheme.colorScheme.tertiary,
-                  Color(0xFF16A34A),
-                  MaterialTheme.colorScheme.primary
-                )
-              ),
-              shape = CircleShape
-            )
-        )
-        Icon(
-          imageVector = Icons.Default.Autorenew,
-          contentDescription = null,
-          tint = MaterialTheme.colorScheme.primary,
-          modifier = Modifier.size(46.dp)
+        Image(
+          painter = painterResource(id = R.drawable.app_logo),
+          contentDescription = "Recycle Bin Rangpur Logo",
+          modifier = Modifier.fillMaxSize()
         )
       }
 
-      Spacer(modifier = Modifier.height(28.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
       // Brand Title with enlarged styling
       Text(
-        text = "Recycl Rangpur",
+        text = "Recycle Bin Rangpur",
         style = MaterialTheme.typography.headlineMedium.copy(
           fontWeight = FontWeight.ExtraBold,
-          fontSize = 28.sp
+          fontSize = 26.sp
         ),
         color = MaterialTheme.colorScheme.primary
       )
 
       Text(
-        text = if (isBangla) "রিসাইকেল রংপুর • ব্যবহৃত পণ্যের নির্ভরযোগ্য হাট" else "Recycl Rangpur • Trusted Marketplace",
+        text = if (isBangla) "রিসাইকেল বিন রংপুর • ব্যবহৃত পণ্যের নির্ভরযোগ্য হাট" else "Recycle Bin Rangpur • Trusted Marketplace",
         style = MaterialTheme.typography.titleMedium.copy(
           fontWeight = FontWeight.SemiBold,
-          fontSize = 16.sp
+          fontSize = 15.sp
         ),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -473,20 +460,13 @@ fun RecyclRangpurAuthModal(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-            Box(
+            Image(
+              painter = painterResource(id = R.drawable.app_logo),
+              contentDescription = "Recycle Bin Rangpur",
               modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                imageVector = Icons.Default.Autorenew,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-              )
-            }
+                .size(32.dp)
+                .clip(RoundedCornerShape(6.dp))
+            )
             Text(
               text = if (isSignUpMode) {
                 if (isBangla) "নতুন অ্যাকাউন্ট তৈরি" else "Create Account"
@@ -538,10 +518,9 @@ fun RecyclRangpurAuthModal(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-              Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+              Image(
+                painter = painterResource(id = R.drawable.ic_google_logo),
+                contentDescription = "Google Logo",
                 modifier = Modifier.size(20.dp)
               )
               Text(

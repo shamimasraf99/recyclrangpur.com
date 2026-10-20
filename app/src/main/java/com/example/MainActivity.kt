@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
@@ -337,6 +339,11 @@ fun RecyclRangpurApp() {
                 )
               }
 
+              // Google AdMob Native Ad Bar
+              item(key = "admob_native_bar") {
+                AdMobNativeAdBar(isBangla = isBangla)
+              }
+
               // 4. Feed Section Header
               item(key = "feed_header") {
                 Row(
@@ -579,41 +586,47 @@ fun BikroyStyleHeader(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically
     ) {
-      // Brand Name with location subtitle
-      Column(
+      // Brand Name with logo and location subtitle
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.clickable { onOpenLocationSelector() }
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
+        Image(
+          painter = painterResource(id = R.drawable.app_logo),
+          contentDescription = "Recycle Bin Rangpur",
+          modifier = Modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(8.dp))
+        )
+        Column {
           Text(
-            text = "Recycl Rangpur",
-            style = MaterialTheme.typography.titleLarge.copy(
+            text = "Recycle Bin Rangpur",
+            style = MaterialTheme.typography.titleMedium.copy(
               fontWeight = FontWeight.ExtraBold,
-              fontSize = 20.sp
+              fontSize = 17.sp
             ),
             color = Color.White
           )
-        }
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.LocationOn,
-            contentDescription = null,
-            tint = Color(0xFFFFD166),
-            modifier = Modifier.size(13.dp)
-          )
-          Text(
-            text = "$selectedAreaName ▾",
-            style = MaterialTheme.typography.labelSmall.copy(
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 12.sp
-            ),
-            color = Color(0xFFFFD166)
-          )
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.LocationOn,
+              contentDescription = null,
+              tint = Color(0xFFFFD166),
+              modifier = Modifier.size(13.dp)
+            )
+            Text(
+              text = "$selectedAreaName ▾",
+              style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp
+              ),
+              color = Color(0xFFFFD166)
+            )
+          }
         }
       }
 

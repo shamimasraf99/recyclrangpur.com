@@ -19,5 +19,5 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Recycl Rangpur"
+rootProject.name = "Recycle Bin Rangpur"
 include(":app")

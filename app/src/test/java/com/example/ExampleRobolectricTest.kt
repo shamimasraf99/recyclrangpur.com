@@ -20,6 +20,9 @@ class ExampleRobolectricTest {
   fun appContext_andRangpurFeaturedListings_areConfiguredCorrectly() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     assertEquals("com.aistudio.bikroybd.marketplace", context.packageName)
+    assertEquals("Recycle Bin Rangpur", context.getString(R.string.app_name))
+    assertEquals("ca-app-pub-3940256099942544/9257395921", AdMobConfig.APP_OPEN_AD_UNIT_ID)
+    assertEquals("ca-app-pub-3940256099942544/2247696110", AdMobConfig.NATIVE_AD_UNIT_ID)
 
     val featured = SAMPLE_PRODUCTS.filter { it.isFeatured }
     assertTrue("Should contain featured listings for Rangpur City", featured.isNotEmpty())
