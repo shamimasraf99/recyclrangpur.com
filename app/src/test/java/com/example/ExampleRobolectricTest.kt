@@ -77,4 +77,40 @@ class ExampleRobolectricTest {
     assertTrue("Title Large should be enlarged for readability", Typography.titleLarge.fontSize.value >= 22f)
     assertTrue("Body Large should be at least 17sp", Typography.bodyLarge.fontSize.value >= 17f)
   }
+
+  @Test
+  fun categories_includePetsClothingCosmeticsFoodAndOthers() {
+    val categoryNamesBn = BIKROY_CATEGORY_LIST.map { it.nameBn }
+    assertTrue(categoryNamesBn.any { it.contains("প্রাণী") })
+    assertTrue(categoryNamesBn.any { it.contains("পোশাক") })
+    assertTrue(categoryNamesBn.any { it.contains("কসমেটিকস") })
+    assertTrue(categoryNamesBn.any { it.contains("খাদ্য") })
+    assertTrue(categoryNamesBn.any { it.contains("অন্যান্য") })
+    assertEquals(11, BIKROY_CATEGORY_LIST.size)
+  }
+
+  @Test
+  fun postOwnership_allowsOnlyCreatorAndAdminToModify() {
+    val samplePost = SAMPLE_PRODUCTS.first() // owned by seller_ariful_1 / ariful.rangpur@example.com
+    val ownerUser = AuthenticatedUser(
+      uid = "seller_ariful_1",
+      displayName = "আরিফুল",
+      email = "ariful.rangpur@example.com"
+    )
+    val adminUser = AuthenticatedUser(
+      uid = "admin_uid_99",
+      displayName = "Admin",
+      email = ADMIN_EMAIL
+    )
+    val otherUser = AuthenticatedUser(
+      uid = "other_user_22",
+      displayName = "অন্য ইউজার",
+      email = "someone.else@example.com"
+    )
+
+    assertTrue("Post creator should be allowed to modify", canUserModifyProduct(samplePost, ownerUser))
+    assertTrue("Admin should be allowed to modify any post", canUserModifyProduct(samplePost, adminUser))
+    assertEquals("Other regular user must NOT be allowed to modify", false, canUserModifyProduct(samplePost, otherUser))
+    assertEquals("Guest (null user) must NOT be allowed to modify", false, canUserModifyProduct(samplePost, null))
+  }
 }

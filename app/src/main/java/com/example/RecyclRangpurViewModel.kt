@@ -78,6 +78,21 @@ class RecyclRangpurViewModel(
     }
   }
 
+  fun deleteProduct(
+    product: MarketProduct,
+    onResult: (Result<Unit>) -> Unit = {}
+  ) {
+    viewModelScope.launch {
+      val docId = product.firestoreDocId
+      val result = if (!docId.isNullOrBlank()) {
+        repository.deleteListing(docId)
+      } else {
+        Result.success(Unit)
+      }
+      onResult(result)
+    }
+  }
+
   fun toggleSavedProduct(product: MarketProduct, isCurrentlySaved: Boolean) {
     if (currentUserId.isBlank() || currentUserId == "guest_user") {
       return

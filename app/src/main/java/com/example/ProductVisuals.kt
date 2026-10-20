@@ -127,6 +127,11 @@ fun StudioProductArtwork(
     5 -> listOf(Color(0xFF451A03), Color(0xFF78350F), Color(0xFFD97706))
     6 -> listOf(Color(0xFF111827), Color(0xFF374151), Color(0xFF10B981))
     7 -> listOf(Color(0xFF022C22), Color(0xFF065F46), Color(0xFFA3E635))
+    9 -> listOf(Color(0xFF451A03), Color(0xFF92400E), Color(0xFFFBBF24))
+    10 -> listOf(Color(0xFF500724), Color(0xFF831843), Color(0xFFF472B6))
+    11 -> listOf(Color(0xFF3B0764), Color(0xFF581C87), Color(0xFFC084FC))
+    12 -> listOf(Color(0xFF052E16), Color(0xFF14532D), Color(0xFF4ADE80))
+    13 -> listOf(Color(0xFF1E293B), Color(0xFF334155), Color(0xFF38BDF8))
     else -> listOf(Color(0xFF0C4A6E), Color(0xFF0369A1), Color(0xFFFBBF24))
   }
 
@@ -138,6 +143,11 @@ fun StudioProductArtwork(
     5 -> Icons.Default.Weekend
     6 -> Icons.Default.PhotoCamera
     7 -> Icons.Default.PedalBike
+    9 -> Icons.Default.Pets
+    10 -> Icons.Default.Checkroom
+    11 -> Icons.Default.AutoAwesome
+    12 -> Icons.Default.Restaurant
+    13 -> Icons.Default.FitnessCenter
     else -> Icons.Default.SolarPower
   }
 

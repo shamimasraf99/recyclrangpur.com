@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.sp
 fun PostAdScreen(
   isBangla: Boolean,
   initialProductToEdit: MarketProduct? = null,
+  currentUser: AuthenticatedUser? = null,
   defaultSellerName: String = "মোঃ রাশেদুল ইসলাম",
   defaultSellerPhone: String = "01711223344",
   onPublishProduct: (MarketProduct) -> Unit,
@@ -45,10 +48,11 @@ fun PostAdScreen(
 
   var title by remember { mutableStateOf(initialProductToEdit?.titleBn ?: "") }
   var priceText by remember { mutableStateOf(initialProductToEdit?.priceBdt?.toString() ?: "") }
-  var selectedCategoryId by remember { mutableStateOf(initialProductToEdit?.categoryId ?: 1) }
+  var selectedCategoryId by remember { mutableIntStateOf(initialProductToEdit?.categoryId ?: 1) }
   var selectedCondition by remember { mutableStateOf(initialProductToEdit?.condition ?: "যেমন নতুন") }
   var isNegotiable by remember { mutableStateOf(initialProductToEdit?.isNegotiable ?: true) }
-  var selectedCityAreaIdx by remember { mutableStateOf(initialProductToEdit?.areaIndex ?: 1) }
+  var allowWhatsapp by remember { mutableStateOf(initialProductToEdit?.allowWhatsapp ?: true) }
+  var selectedCityAreaIdx by remember { mutableIntStateOf(initialProductToEdit?.areaIndex ?: 1) }
   var areaDetails by remember { mutableStateOf(initialProductToEdit?.locationBn ?: "জাহাজ কোম্পানি মোড়, রংপুর শহর") }
   var sellerName by remember { mutableStateOf(initialProductToEdit?.sellerName ?: defaultSellerName) }
   var sellerPhone by remember { mutableStateOf(initialProductToEdit?.phone ?: defaultSellerPhone) }
@@ -77,6 +81,7 @@ fun PostAdScreen(
   }
 
   var showStudioPicker by remember { mutableStateOf(true) }
+  var showLivePreview by remember { mutableStateOf(true) }
   var validationError by remember { mutableStateOf<String?>(null) }
   var photoAddedFeedback by remember { mutableStateOf<String?>(null) }
 
@@ -90,7 +95,7 @@ fun PostAdScreen(
         uploadedPhotos.add(
           ProductPhoto(
             id = "gallery_${System.currentTimeMillis()}_$idx",
-            studioPresetId = selectedCategoryId.coerceIn(1, 8),
+            studioPresetId = selectedCategoryId.coerceIn(1, 13),
             captionBn = "গ্যালারি ছবি #${uploadedPhotos.size + 1}",
             captionEn = "Gallery Photo #${uploadedPhotos.size + 1}",
             uriString = uri.toString()
@@ -113,7 +118,7 @@ fun PostAdScreen(
       uploadedPhotos.add(
         ProductPhoto(
           id = "camera_${System.currentTimeMillis()}",
-          studioPresetId = selectedCategoryId.coerceIn(1, 8),
+          studioPresetId = selectedCategoryId.coerceIn(1, 13),
           captionBn = "ক্যামেরা ছবি #${uploadedPhotos.size + 1}",
           captionEn = "Camera Photo #${uploadedPhotos.size + 1}",
           bitmap = bitmap
@@ -126,76 +131,249 @@ fun PostAdScreen(
 
   val conditions = listOf(
     "যেমন নতুন" to "Like New",
+    "খুব ভালো" to "Very Good",
     "ভালো" to "Good",
     "মোটামুটি" to "Fair",
-    "রিসাইকেল যোগ্য" to "Recyclable"
+    "নতুন (ইনট্যাক্ট)" to "Brand New"
   )
+
+  val selectedCategoryObj = BIKROY_CATEGORY_LIST.find { it.id == selectedCategoryId } ?: BIKROY_CATEGORY_LIST[1]
 
   LazyColumn(
     modifier = Modifier
       .fillMaxSize()
-      .background(MaterialTheme.colorScheme.background)
+      .background(Color(0xFFF1F5F9))
       .testTag("post_ad_screen"),
     contentPadding = PaddingValues(16.dp),
-    verticalArrangement = Arrangement.spacedBy(16.dp)
+    verticalArrangement = Arrangement.spacedBy(14.dp)
   ) {
+    // Modern Gradient Studio Header
     item {
       Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
+        shape = RoundedCornerShape(22.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
-        Row(
+        Box(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
+            .background(
+              Brush.linearGradient(
+                colors = listOf(Color(0xFF005B4B), Color(0xFF007A64), Color(0xFF059669))
+              )
+            )
+            .padding(18.dp)
         ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f)
-          ) {
-            Surface(
-              color = MaterialTheme.colorScheme.primary,
-              contentColor = Color.White,
-              shape = RoundedCornerShape(14.dp),
-              modifier = Modifier.size(48.dp)
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
             ) {
-              Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.AddAPhoto, contentDescription = null, modifier = Modifier.size(26.dp))
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+              ) {
+                Surface(
+                  color = Color(0xFFFFD166),
+                  contentColor = Color(0xFF0F172A),
+                  shape = RoundedCornerShape(14.dp),
+                  modifier = Modifier.size(46.dp)
+                ) {
+                  Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                      imageVector = if (initialProductToEdit != null) Icons.Default.EditNote else Icons.Default.AddAPhoto,
+                      contentDescription = null,
+                      modifier = Modifier.size(26.dp)
+                    )
+                  }
+                }
+                Column {
+                  Text(
+                    text = if (initialProductToEdit != null) {
+                      if (isBangla) "বিজ্ঞাপন আপডেট স্টুডিও" else "Edit Listing Studio"
+                    } else {
+                      if (isBangla) "আধুনিক বিজ্ঞাপন প্রকাশ পেজ" else "Modern Ad Publishing Studio"
+                    },
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 19.sp,
+                    color = Color.White
+                  )
+                  Text(
+                    text = if (isBangla)
+                      "Recycle Bin Rangpur • ৩টি সহজ ধাপে দ্রুত পণ্য বিক্রি করুন"
+                    else
+                      "Recycle Bin Rangpur • Sell faster in 3 simple steps",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.88f)
+                  )
+                }
+              }
+
+              IconButton(
+                onClick = onCancel,
+                modifier = Modifier
+                  .background(Color.White.copy(alpha = 0.16f), CircleShape)
+                  .size(36.dp)
+                  .testTag("close_post_ad_btn")
+              ) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(18.dp))
               }
             }
-            Column {
-              Text(
-                text = if (initialProductToEdit != null) {
-                  if (isBangla) "পণ্যের ছবি ও বিজ্ঞাপন আপডেট করুন" else "Update Product & Photos"
-                } else {
-                  if (isBangla) "রংপুর শহরে ছবিসহ বিজ্ঞাপন দিন" else "Post Ad with Photos in Rangpur City"
-                },
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 19.sp,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+
+            // Modern 3-Step Indicator Bar
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              val steps = listOf(
+                (if (isBangla) "১. পণ্যের ছবি" else "1. Photos") to uploadedPhotos.isNotEmpty(),
+                (if (isBangla) "২. ক্যাটাগরি ও দাম" else "2. Details") to (title.length >= 3 && (priceText.toIntOrNull() ?: 0) > 0),
+                (if (isBangla) "৩. লোকেশন ও প্রকাশ" else "3. Publish") to sellerPhone.isNotBlank()
               )
-              Text(
-                text = if (isBangla)
-                  "Recycl Rangpur • গ্যালারি, ক্যামেরা বা স্টুডিও থেকে সর্বোচ্চ ৫টি ছবি দিন"
-                else
-                  "Recycl Rangpur • Upload up to 5 photos from Gallery, Camera or Studio",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-              )
+              steps.forEach { (label, isDone) ->
+                Surface(
+                  color = if (isDone) Color(0xFFFFD166) else Color.White.copy(alpha = 0.15f),
+                  shape = RoundedCornerShape(50),
+                  modifier = Modifier.weight(1f)
+                ) {
+                  Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                  ) {
+                    Icon(
+                      imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                      contentDescription = null,
+                      tint = if (isDone) Color(0xFF0F172A) else Color.White,
+                      modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                      text = label,
+                      fontSize = 11.sp,
+                      fontWeight = FontWeight.Bold,
+                      color = if (isDone) Color(0xFF0F172A) else Color.White,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis
+                    )
+                  }
+                }
+              }
             }
           }
+        }
+      }
+    }
 
-          IconButton(
-            onClick = onCancel,
-            modifier = Modifier.testTag("close_post_ad_btn")
+    // Live Ad Preview Card
+    item {
+      Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { showLivePreview = !showLivePreview },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
           ) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+              Icon(Icons.Default.Visibility, contentDescription = null, tint = Color(0xFF007A64), modifier = Modifier.size(18.dp))
+              Text(
+                text = if (isBangla) "লাইভ বিজ্ঞাপন প্রিভিউ (কেমন দেখাবে)" else "Live Ad Preview",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 14.sp,
+                color = Color(0xFF0F172A)
+              )
+            }
+            Text(
+              text = if (showLivePreview) (if (isBangla) "লুকান ▴" else "Hide ▴") else (if (isBangla) "দেখুন ▾" else "Show ▾"),
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF007A64)
+            )
+          }
+
+          AnimatedVisibility(visible = showLivePreview) {
+            val previewPhoto = uploadedPhotos.firstOrNull() ?: ProductPhoto(
+              id = "preview_fallback",
+              studioPresetId = selectedCategoryId.coerceIn(1, 13)
+            )
+            Surface(
+              color = Color(0xFFF8FAFC),
+              shape = RoundedCornerShape(14.dp),
+              border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Row(
+                modifier = Modifier.padding(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Box(
+                  modifier = Modifier
+                    .size(82.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                ) {
+                  ProductPhotoView(
+                    photo = previewPhoto,
+                    modifier = Modifier.fillMaxSize(),
+                    showCaptionBadge = false,
+                    isBangla = isBangla
+                  )
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                  Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                      color = Color(selectedCategoryObj.accentColor).copy(alpha = 0.14f),
+                      shape = RoundedCornerShape(6.dp)
+                    ) {
+                      Text(
+                        text = if (isBangla) selectedCategoryObj.nameBn else selectedCategoryObj.nameEn,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(selectedCategoryObj.accentColor),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                      )
+                    }
+                    Surface(color = Color(0xFFE2E8F0), shape = RoundedCornerShape(6.dp)) {
+                      Text(
+                        text = selectedCondition,
+                        fontSize = 10.sp,
+                        color = Color(0xFF334155),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                      )
+                    }
+                  }
+                  Text(
+                    text = title.ifBlank { if (isBangla) "আপনার পণ্যের শিরোনাম এখানে দেখাবে..." else "Your product title will appear here..." },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color(0xFF0F172A)
+                  )
+                  Text(
+                    text = areaDetails.ifBlank { "রংপুর শহর" },
+                    fontSize = 12.sp,
+                    color = Color(0xFF64748B),
+                    maxLines = 1
+                  )
+                  Text(
+                    text = "Tk ${priceText.ifBlank { "0" }}" + if (isNegotiable) (if (isBangla) " (আলোচনা সাপেক্ষ)" else " (Negotiable)") else "",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    color = Color(0xFF007A64)
+                  )
+                }
+              }
+            }
           }
         }
       }
@@ -225,11 +403,12 @@ fun PostAdScreen(
       }
     }
 
+    // Section 1: Photo Upload Studio
     item {
       Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
           .fillMaxWidth()
           .testTag("photo_upload_section_card")
@@ -247,34 +426,35 @@ fun PostAdScreen(
               Icon(
                 Icons.Default.PhotoLibrary,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = Color(0xFF007A64)
               )
               Column {
                 Text(
                   text = if (isBangla) "১. পণ্যের ছবি যুক্ত করুন *" else "1. Add Product Photos *",
                   fontWeight = FontWeight.ExtraBold,
-                  fontSize = 18.sp
+                  fontSize = 17.sp,
+                  color = Color(0xFF0F172A)
                 )
                 Text(
                   text = if (isBangla)
-                    "স্পষ্ট ছবি দিলে রংপুর শহরের ক্রেতারা ৩ গুণ দ্রুত যোগাযোগ করেন"
+                    "প্রথম ছবিটি মূল কভার হিসেবে প্রদর্শিত হবে (সর্বোচ্চ ৫টি)"
                   else
-                    "Clear photos get 3x faster responses from Rangpur City buyers",
-                  fontSize = 13.sp,
-                  color = MaterialTheme.colorScheme.outline
+                    "First photo is used as main cover (Max 5 photos)",
+                  fontSize = 12.sp,
+                  color = Color(0xFF64748B)
                 )
               }
             }
 
             Surface(
-              color = if (uploadedPhotos.isNotEmpty()) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+              color = if (uploadedPhotos.isNotEmpty()) Color(0xFF007A64).copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer,
               shape = RoundedCornerShape(50)
             ) {
               Text(
                 text = "${uploadedPhotos.size} / 5",
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 14.sp,
-                color = if (uploadedPhotos.isNotEmpty()) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                fontSize = 13.sp,
+                color = if (uploadedPhotos.isNotEmpty()) Color(0xFF007A64) else MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier
                   .padding(horizontal = 12.dp, vertical = 5.dp)
                   .testTag("uploaded_photo_counter")
@@ -297,10 +477,10 @@ fun PostAdScreen(
                 ) {
                   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF34D399), modifier = Modifier.size(18.dp))
-                    Text(msg, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(msg, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                   }
                   TextButton(onClick = { photoAddedFeedback = null }) {
-                    Text("OK", color = Color.White, fontSize = 13.sp)
+                    Text("OK", color = Color.White, fontSize = 12.sp)
                   }
                 }
               }
@@ -311,12 +491,12 @@ fun PostAdScreen(
             Box(
               modifier = Modifier
                 .fillMaxWidth()
-                .height(125.dp)
+                .height(120.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(Color(0xFFF8FAFC))
                 .border(
                   width = 1.5.dp,
-                  color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                  color = Color(0xFFCBD5E1),
                   shape = RoundedCornerShape(16.dp)
                 ),
               contentAlignment = Alignment.Center
@@ -328,14 +508,14 @@ fun PostAdScreen(
                 Icon(
                   Icons.Default.AddPhotoAlternate,
                   contentDescription = null,
-                  modifier = Modifier.size(38.dp),
-                  tint = MaterialTheme.colorScheme.primary
+                  modifier = Modifier.size(36.dp),
+                  tint = Color(0xFF007A64)
                 )
                 Text(
                   text = if (isBangla) "এখনো কোনো ছবি যোগ করা হয়নি — নিচের বাটনে ট্যাপ করুন" else "No photos yet — tap a button below to add",
-                  fontSize = 14.sp,
+                  fontSize = 13.sp,
                   fontWeight = FontWeight.SemiBold,
-                  color = MaterialTheme.colorScheme.outline
+                  color = Color(0xFF64748B)
                 )
               }
             }
@@ -349,12 +529,12 @@ fun PostAdScreen(
               itemsIndexed(uploadedPhotos, key = { _, item -> item.id }) { index, photo ->
                 Box(
                   modifier = Modifier
-                    .width(150.dp)
-                    .height(135.dp)
+                    .width(146.dp)
+                    .height(130.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                       width = if (index == 0) 2.5.dp else 1.dp,
-                      color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                      color = if (index == 0) Color(0xFF007A64) else Color(0xFFCBD5E1),
                       shape = RoundedCornerShape(16.dp)
                     )
                 ) {
@@ -366,7 +546,7 @@ fun PostAdScreen(
                   )
 
                   Surface(
-                    color = if (index == 0) Color(0xFF059669) else Color.Black.copy(alpha = 0.65f),
+                    color = if (index == 0) Color(0xFF007A64) else Color.Black.copy(alpha = 0.65f),
                     contentColor = Color.White,
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -396,7 +576,7 @@ fun PostAdScreen(
                     modifier = Modifier
                       .align(Alignment.TopEnd)
                       .padding(4.dp)
-                      .size(28.dp)
+                      .size(26.dp)
                       .background(Color(0xFFE11D48), CircleShape)
                       .testTag("remove_photo_btn_$index")
                   ) {
@@ -404,7 +584,7 @@ fun PostAdScreen(
                       Icons.Default.Close,
                       contentDescription = "Remove Photo",
                       tint = Color.White,
-                      modifier = Modifier.size(16.dp)
+                      modifier = Modifier.size(15.dp)
                     )
                   }
                 }
@@ -425,7 +605,8 @@ fun PostAdScreen(
                 }
               },
               enabled = uploadedPhotos.size < 5,
-              shape = RoundedCornerShape(14.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A64)),
+              shape = RoundedCornerShape(12.dp),
               modifier = Modifier
                 .weight(1f)
                 .testTag("btn_pick_gallery_photo")
@@ -434,7 +615,7 @@ fun PostAdScreen(
               Spacer(modifier = Modifier.width(6.dp))
               Text(
                 text = if (isBangla) "গ্যালারি থেকে ছবি" else "From Gallery",
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
               )
             }
@@ -446,7 +627,7 @@ fun PostAdScreen(
                 }
               },
               enabled = uploadedPhotos.size < 5,
-              shape = RoundedCornerShape(14.dp),
+              shape = RoundedCornerShape(12.dp),
               modifier = Modifier
                 .weight(1f)
                 .testTag("btn_take_camera_photo")
@@ -455,15 +636,17 @@ fun PostAdScreen(
               Spacer(modifier = Modifier.width(6.dp))
               Text(
                 text = if (isBangla) "ক্যামেরায় তুলুন" else "Use Camera",
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
               )
             }
           }
 
+          // Studio Presets (1..13 covering all categories)
           Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFFF8FAFC),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             modifier = Modifier.fillMaxWidth()
           ) {
             Column(
@@ -486,11 +669,12 @@ fun PostAdScreen(
                   )
                   Text(
                     text = if (isBangla)
-                      "রেডি স্টুডিও পণ্যের ছবি ১ ক্লিকে যুক্ত করুন (ট্যাপ করুন)"
+                      "রেডি স্টুডিও পণ্যের ছবি ১ ক্লিকে যুক্ত করুন"
                     else
-                      "1-Tap Add Studio Product Photos (Tap to select)",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                      "1-Tap Add Studio Product Photos",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
                   )
                 }
                 Icon(
@@ -506,9 +690,10 @@ fun PostAdScreen(
                 ) {
                   items(STUDIO_PHOTO_PRESETS) { preset ->
                     Card(
-                      shape = RoundedCornerShape(14.dp),
+                      shape = RoundedCornerShape(12.dp),
+                      colors = CardDefaults.cardColors(containerColor = Color.White),
                       modifier = Modifier
-                        .width(136.dp)
+                        .width(132.dp)
                         .clickable(enabled = uploadedPhotos.size < 5) {
                           if (uploadedPhotos.size < 5) {
                             uploadedPhotos.add(
@@ -534,7 +719,7 @@ fun PostAdScreen(
                         Box(
                           modifier = Modifier
                             .fillMaxWidth()
-                            .height(78.dp)
+                            .height(74.dp)
                         ) {
                           StudioProductArtwork(
                             presetId = preset.presetId,
@@ -547,25 +732,25 @@ fun PostAdScreen(
                             modifier = Modifier
                               .align(Alignment.BottomEnd)
                               .padding(6.dp)
-                              .size(24.dp)
+                              .size(22.dp)
                           ) {
                             Box(contentAlignment = Alignment.Center) {
-                              Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(15.dp))
+                              Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
                             }
                           }
                         }
                         Column(modifier = Modifier.padding(8.dp)) {
                           Text(
                             text = if (isBangla) preset.titleBn else preset.titleEn,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                           )
                           Text(
-                            text = if (isBangla) "+ ছবি যুক্ত করুন" else "+ Add Photo",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary,
+                            text = if (isBangla) "+ যুক্ত করুন" else "+ Add Photo",
+                            fontSize = 11.sp,
+                            color = Color(0xFF007A64),
                             fontWeight = FontWeight.SemiBold
                           )
                         }
@@ -580,11 +765,12 @@ fun PostAdScreen(
       }
     }
 
+    // Section 2: Modern Category Cards, Product Info & Price
     item {
       Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(
@@ -592,27 +778,76 @@ fun PostAdScreen(
           verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
           Text(
-            text = if (isBangla) "২. পণ্যের বিবরণ ও মূল্য (৳)" else "2. Product Details & Price (৳)",
+            text = if (isBangla) "২. ক্যাটাগরি, পণ্যের বিবরণ ও মূল্য (৳)" else "2. Category, Product Details & Price (৳)",
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 18.sp
+            fontSize = 17.sp,
+            color = Color(0xFF0F172A)
           )
 
           Text(
-            text = if (isBangla) "ক্যাটাগরি নির্বাচন করুন" else "Select Category",
-            fontSize = 14.sp,
+            text = if (isBangla) "সঠিক ক্যাটাগরি নির্বাচন করুন *" else "Select Product Category *",
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.outline
+            color = Color(0xFF475569)
           )
-          LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(CATEGORIES.drop(1).size) { idx ->
-              val catId = idx + 1
-              val (bn, en) = CATEGORIES[catId]
-              FilterChip(
-                selected = selectedCategoryId == catId,
-                onClick = { selectedCategoryId = catId },
-                label = { Text(if (isBangla) bn else en, fontSize = 14.sp) },
-                shape = RoundedCornerShape(12.dp)
-              )
+
+          // Visual Category Selector Row with Icons (Includes Pets, Clothing, Cosmetics, Food, Others)
+          LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            items(BIKROY_CATEGORY_LIST.drop(1)) { catItem ->
+              val isSelected = selectedCategoryId == catItem.id
+              val catIcon = when (catItem.iconType) {
+                "phone" -> Icons.Default.PhoneAndroid
+                "laptop" -> Icons.Default.LaptopMac
+                "bike" -> Icons.Default.TwoWheeler
+                "tv" -> Icons.Default.Tv
+                "furniture" -> Icons.Default.Weekend
+                "pets" -> Icons.Default.Pets
+                "clothing" -> Icons.Default.Checkroom
+                "cosmetics" -> Icons.Default.AutoAwesome
+                "food" -> Icons.Default.Restaurant
+                else -> Icons.Default.Category
+              }
+              Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) Color(catItem.accentColor).copy(alpha = 0.14f) else Color(0xFFF8FAFC),
+                border = BorderStroke(
+                  width = if (isSelected) 2.dp else 1.dp,
+                  color = if (isSelected) Color(catItem.accentColor) else Color(0xFFE2E8F0)
+                ),
+                modifier = Modifier
+                  .clickable { selectedCategoryId = catItem.id }
+                  .testTag("post_ad_cat_${catItem.id}")
+              ) {
+                Row(
+                  modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                  Box(
+                    modifier = Modifier
+                      .size(30.dp)
+                      .clip(CircleShape)
+                      .background(Color(catItem.accentColor).copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center
+                  ) {
+                    Icon(
+                      imageVector = catIcon,
+                      contentDescription = null,
+                      tint = Color(catItem.accentColor),
+                      modifier = Modifier.size(17.dp)
+                    )
+                  }
+                  Text(
+                    text = if (isBangla) catItem.nameBn else catItem.nameEn,
+                    fontSize = 13.sp,
+                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                    color = if (isSelected) Color(catItem.accentColor) else Color(0xFF1E293B)
+                  )
+                }
+              }
             }
           }
 
@@ -622,10 +857,10 @@ fun PostAdScreen(
               title = it
               validationError = null
             },
-            label = { Text(if (isBangla) "পণ্যের নাম / শিরোনাম *" else "Product Title *", fontSize = 15.sp) },
+            label = { Text(if (isBangla) "পণ্যের নাম / শিরোনাম *" else "Product Title *", fontSize = 14.sp) },
             placeholder = {
               Text(
-                if (isBangla) "যেমন: Samsung Galaxy A54 5G (বক্স ও চার্জার সহ)" else "e.g., Samsung Galaxy A54 5G with Box"
+                if (isBangla) "যেমন: পার্সিয়ান বিড়াল ছানা / Samsung S22 / প্রিমিয়াম পাঞ্জাবি" else "e.g., Samsung Galaxy A54 / Persian Kitten"
               )
             },
             singleLine = true,
@@ -646,10 +881,10 @@ fun PostAdScreen(
                 priceText = input.filter { it.isDigit() }
                 validationError = null
               },
-              label = { Text(if (isBangla) "মূল্য (৳ টাকা) *" else "Price (৳ BDT) *", fontSize = 15.sp) },
-              placeholder = { Text("18500") },
+              label = { Text(if (isBangla) "মূল্য (৳ টাকা) *" else "Price (৳ BDT) *", fontSize = 14.sp) },
+              placeholder = { Text("2500") },
               leadingIcon = {
-                Text("৳", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+                Text("৳", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = Color(0xFF007A64))
               },
               keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
               singleLine = true,
@@ -659,31 +894,44 @@ fun PostAdScreen(
                 .testTag("input_product_price")
             )
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-              Text(
-                text = if (isBangla) "আলোচনা সাপেক্ষ" else "Negotiable",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-              )
-              Switch(
-                checked = isNegotiable,
-                onCheckedChange = { isNegotiable = it }
-              )
+            Surface(
+              color = if (isNegotiable) Color(0xFF007A64).copy(alpha = 0.1f) else Color(0xFFF8FAFC),
+              shape = RoundedCornerShape(14.dp),
+              border = BorderStroke(1.dp, if (isNegotiable) Color(0xFF007A64) else Color(0xFFE2E8F0)),
+              modifier = Modifier.clickable { isNegotiable = !isNegotiable }
+            ) {
+              Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
+                Checkbox(
+                  checked = isNegotiable,
+                  onCheckedChange = { isNegotiable = it },
+                  modifier = Modifier.size(20.dp)
+                )
+                Text(
+                  text = if (isBangla) "আলোচনা সাপেক্ষ" else "Negotiable",
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFF0F172A)
+                )
+              }
             }
           }
 
           Text(
-            text = if (isBangla) "পণ্যের বর্তমান অবস্থা" else "Product Condition",
-            fontSize = 14.sp,
+            text = if (isBangla) "পণ্যের বর্তমান অবস্থা (Condition)" else "Product Condition",
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.outline
+            color = Color(0xFF475569)
           )
           LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(conditions) { (bn, en) ->
               FilterChip(
                 selected = selectedCondition == bn,
                 onClick = { selectedCondition = bn },
-                label = { Text(if (isBangla) bn else en, fontSize = 14.sp) },
+                label = { Text(if (isBangla) bn else en, fontSize = 13.sp) },
                 shape = RoundedCornerShape(12.dp)
               )
             }
@@ -692,7 +940,7 @@ fun PostAdScreen(
           OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text(if (isBangla) "বিস্তারিত বিবরণ" else "Detailed Description", fontSize = 15.sp) },
+            label = { Text(if (isBangla) "বিস্তারিত বিবরণ (কেন কিনবে, পণ্যের বৈশিষ্ট্য)" else "Detailed Description", fontSize = 14.sp) },
             minLines = 3,
             maxLines = 5,
             shape = RoundedCornerShape(14.dp),
@@ -704,11 +952,12 @@ fun PostAdScreen(
       }
     }
 
+    // Section 3: Location & Contact
     item {
       Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(
@@ -718,14 +967,15 @@ fun PostAdScreen(
           Text(
             text = if (isBangla) "৩. রংপুর শহরের এলাকা এবং যোগাযোগ" else "3. Rangpur City Area & Contact",
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 18.sp
+            fontSize = 17.sp,
+            color = Color(0xFF0F172A)
           )
 
           Text(
             text = if (isBangla) "রংপুর শহরের এলাকা নির্বাচন করুন *" else "Select Rangpur City Area *",
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.outline
+            color = Color(0xFF475569)
           )
           LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(RANGPUR_CITY_AREAS.drop(1).size) { idx ->
@@ -737,7 +987,7 @@ fun PostAdScreen(
                   selectedCityAreaIdx = areaIdx
                   areaDetails = if (isBangla) "$bn, রংপুর শহর" else "$en, Rangpur City"
                 },
-                label = { Text(if (isBangla) bn else en, fontSize = 14.sp) },
+                label = { Text(if (isBangla) bn else en, fontSize = 13.sp) },
                 leadingIcon = if (selectedCityAreaIdx == areaIdx) {
                   { Icon(Icons.Default.Place, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 } else null,
@@ -749,7 +999,7 @@ fun PostAdScreen(
           OutlinedTextField(
             value = areaDetails,
             onValueChange = { areaDetails = it },
-            label = { Text(if (isBangla) "রংপুর শহরের সুনির্দিষ্ট ঠিকানা / মোড়" else "Exact Street / Landmark in Rangpur City", fontSize = 15.sp) },
+            label = { Text(if (isBangla) "রংপুর শহরের সুনির্দিষ্ট ঠিকানা / মোড়" else "Exact Street / Landmark in Rangpur City", fontSize = 14.sp) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
@@ -762,7 +1012,7 @@ fun PostAdScreen(
             OutlinedTextField(
               value = sellerName,
               onValueChange = { sellerName = it },
-              label = { Text(if (isBangla) "বিক্রেতার নাম" else "Seller Name", fontSize = 15.sp) },
+              label = { Text(if (isBangla) "বিক্রেতার নাম" else "Seller Name", fontSize = 14.sp) },
               singleLine = true,
               shape = RoundedCornerShape(14.dp),
               modifier = Modifier.weight(1f)
@@ -770,7 +1020,7 @@ fun PostAdScreen(
             OutlinedTextField(
               value = sellerPhone,
               onValueChange = { sellerPhone = it },
-              label = { Text(if (isBangla) "মোবাইল নম্বর *" else "Mobile Number *", fontSize = 15.sp) },
+              label = { Text(if (isBangla) "মোবাইল নম্বর *" else "Mobile Number *", fontSize = 14.sp) },
               singleLine = true,
               keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
               shape = RoundedCornerShape(14.dp),
@@ -778,6 +1028,33 @@ fun PostAdScreen(
                 .weight(1f)
                 .testTag("input_seller_phone")
             )
+          }
+
+          // WhatsApp availability toggle
+          Surface(
+            color = Color(0xFFF0FDF4),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, Color(0xFFBBF7D0)),
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { allowWhatsapp = !allowWhatsapp }
+          ) {
+            Row(
+              modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Chat, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                Text(
+                  text = if (isBangla) "এই নম্বরে হোয়াটসঅ্যাপ (WhatsApp) এ যোগাযোগ করা যাবে" else "Allow buyers to contact via WhatsApp",
+                  fontSize = 13.sp,
+                  fontWeight = FontWeight.SemiBold,
+                  color = Color(0xFF166534)
+                )
+              }
+              Switch(checked = allowWhatsapp, onCheckedChange = { allowWhatsapp = it })
+            }
           }
 
           Row(
@@ -789,7 +1066,9 @@ fun PostAdScreen(
             OutlinedButton(
               onClick = onCancel,
               shape = RoundedCornerShape(14.dp),
-              modifier = Modifier.weight(1f)
+              modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
             ) {
               Text(if (isBangla) "বাতিল" else "Cancel", fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
@@ -844,21 +1123,31 @@ fun PostAdScreen(
                   postedAgoBn = "এইমাত্র",
                   postedAgoEn = "Just now",
                   isVerifiedSeller = true,
-                  allowWhatsapp = true,
+                  allowWhatsapp = allowWhatsapp,
                   isUserCreated = true,
-                  firestoreDocId = initialProductToEdit?.firestoreDocId
+                  firestoreDocId = initialProductToEdit?.firestoreDocId,
+                  ownerUid = initialProductToEdit?.ownerUid?.ifBlank { currentUser?.uid ?: "" }
+                    ?: (currentUser?.uid ?: ""),
+                  ownerEmail = initialProductToEdit?.ownerEmail?.ifBlank { currentUser?.email ?: "" }
+                    ?: (currentUser?.email ?: "")
                 )
                 onPublishProduct(newProduct)
               },
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A64)),
               shape = RoundedCornerShape(14.dp),
               modifier = Modifier
                 .weight(2f)
+                .height(50.dp)
                 .testTag("submit_post_ad_btn")
             ) {
               Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp))
               Spacer(modifier = Modifier.width(8.dp))
               Text(
-                text = if (isBangla) "ছবি সহ বিজ্ঞাপন প্রকাশ করুন" else "Publish Ad with Photos",
+                text = if (initialProductToEdit != null) {
+                  if (isBangla) "আপডেট সংরক্ষণ করুন" else "Save Changes"
+                } else {
+                  if (isBangla) "ছবি সহ বিজ্ঞাপন প্রকাশ করুন" else "Publish Ad Now"
+                },
                 fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold
               )

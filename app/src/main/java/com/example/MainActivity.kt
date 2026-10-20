@@ -17,9 +17,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +54,9 @@ class MainActivity : ComponentActivity() {
 
 enum class AppScreen {
   HOME,
-  POST_AD
+  POST_AD,
+  PROFILE_DASHBOARD,
+  PRODUCT_DETAIL
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,8 +84,16 @@ fun RecyclRangpurApp() {
 
   // Navigation State
   var currentScreen by remember { mutableStateOf(AppScreen.HOME) }
+  var previousScreenBeforeDetail by remember { mutableStateOf(AppScreen.HOME) }
   var productToEdit by remember { mutableStateOf<MarketProduct?>(null) }
   var selectedProductForDetail by remember { mutableStateOf<MarketProduct?>(null) }
+
+  // Ensure Profile Dashboard is never shown when logged out
+  LaunchedEffect(currentUser, currentScreen) {
+    if (currentUser == null && currentScreen == AppScreen.PROFILE_DASHBOARD) {
+      currentScreen = AppScreen.HOME
+    }
+  }
 
   // Auth Modal State
   var showAuthModal by remember { mutableStateOf(false) }
@@ -171,17 +180,46 @@ fun RecyclRangpurApp() {
     allProducts.filter { it.isFeatured }.ifEmpty { allProducts.take(4) }
   }
 
-  // Helper to open Post Ad (with guest auth gate)
+  // Helper to open full-page E-Commerce Product Detail Screen
+  fun openProductDetailPage(product: MarketProduct) {
+    if (currentScreen != AppScreen.PRODUCT_DETAIL) {
+      previousScreenBeforeDetail = currentScreen
+    }
+    selectedProductForDetail = product
+    currentScreen = AppScreen.PRODUCT_DETAIL
+  }
+
+  // Helper to open Post Ad (with guest auth gate AND strict ownership/admin check for edits)
   fun handleStartPostAd(editTarget: MarketProduct? = null) {
     if (currentUser == null) {
       pendingActionAfterAuth = {
-        productToEdit = editTarget
-        currentScreen = AppScreen.POST_AD
+        if (editTarget == null || canUserModifyProduct(editTarget, currentUser)) {
+          productToEdit = editTarget
+          currentScreen = AppScreen.POST_AD
+        }
       }
       showAuthModal = true
     } else {
+      if (editTarget != null && !canUserModifyProduct(editTarget, currentUser)) {
+        return
+      }
       productToEdit = editTarget
       currentScreen = AppScreen.POST_AD
+    }
+  }
+
+  // Helper to delete a product (only owner or admin)
+  fun handleDeleteProduct(target: MarketProduct) {
+    if (!canUserModifyProduct(target, currentUser)) return
+    allProducts = allProducts.filter { it.id != target.id }
+    if (selectedProductForDetail?.id == target.id) {
+      selectedProductForDetail = null
+      if (currentScreen == AppScreen.PRODUCT_DETAIL) {
+        currentScreen = previousScreenBeforeDetail
+      }
+    }
+    if (currentUser != null && !target.firestoreDocId.isNullOrBlank()) {
+      viewModel.deleteProduct(target)
     }
   }
 
@@ -189,23 +227,141 @@ fun RecyclRangpurApp() {
     Scaffold(
       modifier = Modifier.fillMaxSize(),
       topBar = {
-        BikroyStyleHeader(
-          isBangla = isBangla,
-          currentUser = currentUser,
-          selectedAreaName = if (isBangla) RANGPUR_CITY_AREAS[selectedAreaIdx].first else RANGPUR_CITY_AREAS[selectedAreaIdx].second,
-          searchQuery = searchQuery,
-          onSearchQueryChange = { searchQuery = it },
-          onOpenLocationSelector = { showLocationSheet = true },
-          onToggleLanguage = { isBangla = !isBangla },
-          onAuthClick = {
+        if (currentScreen != AppScreen.PRODUCT_DETAIL) {
+          BikroyStyleHeader(
+            isBangla = isBangla,
+            currentUser = currentUser,
+            selectedAreaName = if (isBangla) RANGPUR_CITY_AREAS[selectedAreaIdx].first else RANGPUR_CITY_AREAS[selectedAreaIdx].second,
+            searchQuery = searchQuery,
+            onSearchQueryChange = {
+              searchQuery = it
+              if (currentScreen != AppScreen.HOME && it.isNotBlank()) {
+                currentScreen = AppScreen.HOME
+              }
+            },
+            onOpenLocationSelector = { showLocationSheet = true },
+            onToggleLanguage = { isBangla = !isBangla },
+            onAuthOrProfileClick = {
+              if (currentUser == null) {
+                pendingActionAfterAuth = null
+                showAuthModal = true
+              } else {
+                currentScreen = AppScreen.PROFILE_DASHBOARD
+              }
+            }
+          )
+        }
+      },
+      bottomBar = {
+        if (currentScreen != AppScreen.PRODUCT_DETAIL) {
+          NavigationBar(
+            containerColor = Color.White,
+            tonalElevation = 6.dp,
+            modifier = Modifier.testTag("bottom_navigation_bar")
+          ) {
+            NavigationBarItem(
+              selected = currentScreen == AppScreen.HOME,
+              onClick = { currentScreen = AppScreen.HOME },
+              icon = {
+                Icon(
+                  imageVector = if (currentScreen == AppScreen.HOME) Icons.Default.Home else Icons.Default.Storefront,
+                  contentDescription = "Home"
+                )
+              },
+              label = {
+                Text(
+                  text = if (isBangla) "হোম মার্কেট" else "Home",
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 11.sp
+                )
+              },
+              colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF007A64),
+                selectedTextColor = Color(0xFF007A64),
+                indicatorColor = Color(0xFF007A64).copy(alpha = 0.12f)
+              ),
+              modifier = Modifier.testTag("nav_home_tab")
+            )
+
+            NavigationBarItem(
+              selected = currentScreen == AppScreen.POST_AD,
+              onClick = { handleStartPostAd(null) },
+              icon = {
+                Icon(
+                  imageVector = Icons.Default.AddCircle,
+                  contentDescription = "Post Ad"
+                )
+              },
+              label = {
+                Text(
+                  text = if (isBangla) "বিজ্ঞাপন দিন" else "Post Ad",
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 11.sp
+                )
+              },
+              colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF007A64),
+                selectedTextColor = Color(0xFF007A64),
+                indicatorColor = Color(0xFF007A64).copy(alpha = 0.12f)
+              ),
+              modifier = Modifier.testTag("nav_post_ad_tab")
+            )
+
+            // Before login: show Login button (no Panel). After login: hide Login button and show User Panel / Profile!
             if (currentUser == null) {
-              pendingActionAfterAuth = null
-              showAuthModal = true
+              NavigationBarItem(
+                selected = false,
+                onClick = {
+                  pendingActionAfterAuth = null
+                  showAuthModal = true
+                },
+                icon = {
+                  Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Login"
+                  )
+                },
+                label = {
+                  Text(
+                    text = if (isBangla) "লগইন" else "Login",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                  )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                  selectedIconColor = Color(0xFF007A64),
+                  selectedTextColor = Color(0xFF007A64),
+                  indicatorColor = Color(0xFF007A64).copy(alpha = 0.12f)
+                ),
+                modifier = Modifier.testTag("nav_login_tab")
+              )
             } else {
-              authManager.signOut()
+              NavigationBarItem(
+                selected = currentScreen == AppScreen.PROFILE_DASHBOARD,
+                onClick = { currentScreen = AppScreen.PROFILE_DASHBOARD },
+                icon = {
+                  Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "User Panel"
+                  )
+                },
+                label = {
+                  Text(
+                    text = if (isBangla) "ইউজার প্যানেল" else "User Panel",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                  )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                  selectedIconColor = Color(0xFF007A64),
+                  selectedTextColor = Color(0xFF007A64),
+                  indicatorColor = Color(0xFF007A64).copy(alpha = 0.12f)
+                ),
+                modifier = Modifier.testTag("nav_profile_dashboard_tab")
+              )
             }
           }
-        )
+        }
       },
       floatingActionButton = {
         if (currentScreen == AppScreen.HOME) {
@@ -240,7 +396,7 @@ fun RecyclRangpurApp() {
                 .testTag("home_marketplace_list"),
               contentPadding = PaddingValues(bottom = 90.dp)
             ) {
-              // 1. Bikroy-Style Clean Category Grid (3x2 neatly organized)
+              // 1. Bikroy-Style Clean Category Grid (All 11 items including Pets, Clothing, Cosmetics, Food, Others)
               item(key = "categories_section") {
                 BikroyCategoryGrid(
                   isBangla = isBangla,
@@ -320,7 +476,7 @@ fun RecyclRangpurApp() {
                 }
               }
 
-              // 3. Featured Ads Carousel (Kept as user confirmed it's good)
+              // 3. Featured Ads Carousel
               item(key = "featured_carousel") {
                 FeaturedAdsCarousel(
                   featuredProducts = featuredProducts,
@@ -334,7 +490,7 @@ fun RecyclRangpurApp() {
                     }
                   },
                   onProductClick = { product ->
-                    selectedProductForDetail = product
+                    openProductDetailPage(product)
                   }
                 )
               }
@@ -442,10 +598,12 @@ fun RecyclRangpurApp() {
                 items = displayedProducts,
                 key = { "product_${it.id}_${it.firestoreDocId ?: ""}" }
               ) { product ->
+                val canModify = canUserModifyProduct(product, currentUser)
                 BikroyListingCard(
                   product = product,
                   isBangla = isBangla,
                   isSaved = activeSavedIds.contains(product.id),
+                  canModify = canModify,
                   onToggleSave = {
                     val isSaved = activeSavedIds.contains(product.id)
                     localSavedIds = if (isSaved) localSavedIds - product.id else localSavedIds + product.id
@@ -453,7 +611,8 @@ fun RecyclRangpurApp() {
                       viewModel.toggleSavedProduct(product, isSaved)
                     }
                   },
-                  onClick = { selectedProductForDetail = product },
+                  onEditClick = { handleStartPostAd(product) },
+                  onClick = { openProductDetailPage(product) },
                   modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 4.dp)
@@ -466,15 +625,23 @@ fun RecyclRangpurApp() {
             PostAdScreen(
               isBangla = isBangla,
               initialProductToEdit = productToEdit,
+              currentUser = currentUser,
               defaultSellerName = currentUser?.displayName ?: "রংপুরের বিক্রেতা",
               defaultSellerPhone = currentUser?.phone ?: "01711223344",
               onPublishProduct = { newProduct ->
+                val stampedProduct = newProduct.copy(
+                  ownerUid = newProduct.ownerUid.ifBlank { currentUser?.uid ?: "" },
+                  ownerEmail = newProduct.ownerEmail.ifBlank { currentUser?.email ?: "" }
+                )
                 if (currentUser != null) {
-                  viewModel.publishOrUpdateProduct(newProduct) {
-                    allProducts = listOf(newProduct) + allProducts.filter { it.id != newProduct.id }
+                  viewModel.publishOrUpdateProduct(stampedProduct) {
+                    allProducts = listOf(stampedProduct) + allProducts.filter { it.id != stampedProduct.id }
                   }
                 } else {
-                  allProducts = listOf(newProduct) + allProducts.filter { it.id != newProduct.id }
+                  allProducts = listOf(stampedProduct) + allProducts.filter { it.id != stampedProduct.id }
+                }
+                if (selectedProductForDetail?.id == stampedProduct.id) {
+                  selectedProductForDetail = stampedProduct
                 }
                 currentScreen = AppScreen.HOME
               },
@@ -482,6 +649,88 @@ fun RecyclRangpurApp() {
                 currentScreen = AppScreen.HOME
               }
             )
+          }
+
+          AppScreen.PROFILE_DASHBOARD -> {
+            UserDashboardScreen(
+              isBangla = isBangla,
+              currentUser = currentUser,
+              allProducts = allProducts,
+              savedProductIds = activeSavedIds,
+              onPostNewAd = { handleStartPostAd(null) },
+              onEditProduct = { product -> handleStartPostAd(product) },
+              onDeleteProduct = { product -> handleDeleteProduct(product) },
+              onProductClick = { product -> openProductDetailPage(product) },
+              onToggleSave = { product ->
+                val isSaved = activeSavedIds.contains(product.id)
+                localSavedIds = if (isSaved) localSavedIds - product.id else localSavedIds + product.id
+                if (currentUser != null) {
+                  viewModel.toggleSavedProduct(product, isSaved)
+                }
+              },
+              onLoginClick = {
+                pendingActionAfterAuth = null
+                showAuthModal = true
+              },
+              onLogoutClick = {
+                authManager.signOut()
+                currentScreen = AppScreen.HOME
+              },
+              onBackToHome = {
+                currentScreen = AppScreen.HOME
+              }
+            )
+          }
+
+          AppScreen.PRODUCT_DETAIL -> {
+            val product = selectedProductForDetail
+            if (product == null) {
+              currentScreen = AppScreen.HOME
+            } else {
+              val canModify = canUserModifyProduct(product, currentUser)
+              ProductDetailScreen(
+                product = product,
+                allProducts = allProducts,
+                isBangla = isBangla,
+                isSaved = activeSavedIds.contains(product.id),
+                canModify = canModify,
+                onToggleSave = {
+                  val isSaved = activeSavedIds.contains(product.id)
+                  localSavedIds = if (isSaved) localSavedIds - product.id else localSavedIds + product.id
+                  if (currentUser != null) {
+                    viewModel.toggleSavedProduct(product, isSaved)
+                  }
+                },
+                onAddPhotoToProduct = { newPhoto ->
+                  if (canModify) {
+                    val updated = product.copy(photos = product.photos + newPhoto)
+                    allProducts = allProducts.map { if (it.id == product.id) updated else it }
+                    selectedProductForDetail = updated
+                    if (currentUser != null && !product.firestoreDocId.isNullOrBlank()) {
+                      viewModel.publishOrUpdateProduct(updated) {}
+                    }
+                  }
+                },
+                onEditListingWithPhotos = {
+                  if (canModify) {
+                    handleStartPostAd(product)
+                  }
+                },
+                onDeleteListing = if (canModify) {
+                  { handleDeleteProduct(product) }
+                } else null,
+                onSelectOtherProduct = { otherProduct ->
+                  selectedProductForDetail = otherProduct
+                },
+                onBack = {
+                  currentScreen = if (previousScreenBeforeDetail == AppScreen.PROFILE_DASHBOARD && currentUser != null) {
+                    AppScreen.PROFILE_DASHBOARD
+                  } else {
+                    AppScreen.HOME
+                  }
+                }
+              )
+            }
           }
         }
       }
@@ -497,35 +746,6 @@ fun RecyclRangpurApp() {
           showLocationSheet = false
         },
         onDismiss = { showLocationSheet = false }
-      )
-    }
-
-    // Product Detail Sheet Dialog
-    selectedProductForDetail?.let { product ->
-      ProductDetailDialog(
-        product = product,
-        isBangla = isBangla,
-        isSaved = activeSavedIds.contains(product.id),
-        onToggleSave = {
-          val isSaved = activeSavedIds.contains(product.id)
-          localSavedIds = if (isSaved) localSavedIds - product.id else localSavedIds + product.id
-          if (currentUser != null) {
-            viewModel.toggleSavedProduct(product, isSaved)
-          }
-        },
-        onAddPhotoToProduct = { newPhoto ->
-          val updated = product.copy(photos = product.photos + newPhoto)
-          allProducts = allProducts.map { if (it.id == product.id) updated else it }
-          selectedProductForDetail = updated
-          if (currentUser != null && !product.firestoreDocId.isNullOrBlank()) {
-            viewModel.publishOrUpdateProduct(updated) {}
-          }
-        },
-        onEditListingWithPhotos = {
-          selectedProductForDetail = null
-          handleStartPostAd(product)
-        },
-        onDismiss = { selectedProductForDetail = null }
       )
     }
 
@@ -558,7 +778,9 @@ fun RecyclRangpurApp() {
 }
 
 /**
- * Bikroy.com styled top navigation header with integrated search and location.
+ * Bikroy.com styled top navigation header.
+ * Before login: shows ONLY the Login button (no Panel button).
+ * After login: Login button is hidden and replaced by the User Profile / Panel button.
  */
 @Composable
 fun BikroyStyleHeader(
@@ -569,7 +791,7 @@ fun BikroyStyleHeader(
   onSearchQueryChange: (String) -> Unit,
   onOpenLocationSelector: () -> Unit,
   onToggleLanguage: () -> Unit,
-  onAuthClick: () -> Unit
+  onAuthOrProfileClick: () -> Unit
 ) {
   Column(
     modifier = Modifier
@@ -604,7 +826,7 @@ fun BikroyStyleHeader(
             text = "Recycle Bin Rangpur",
             style = MaterialTheme.typography.titleMedium.copy(
               fontWeight = FontWeight.ExtraBold,
-              fontSize = 17.sp
+              fontSize = 16.sp
             ),
             color = Color.White
           )
@@ -630,32 +852,36 @@ fun BikroyStyleHeader(
         }
       }
 
-      // Actions: Language Toggle & User Button
+      // Actions: Language Toggle & (Login button before login OR User Profile/Panel button after login)
       Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
         // Language Toggle Pill
         Surface(
           shape = RoundedCornerShape(12.dp),
           color = Color.White.copy(alpha = 0.2f),
-          modifier = Modifier.clickable { onToggleLanguage() }.testTag("language_toggle_button")
+          modifier = Modifier
+            .clickable { onToggleLanguage() }
+            .testTag("language_toggle_button")
         ) {
           Text(
             text = if (isBangla) "English" else "বাংলা",
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
             color = Color.White,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
           )
         }
 
-        // Profile / Login Button
         if (currentUser == null) {
+          // Before login: Show ONLY Login button (no Panel)
           Surface(
             shape = RoundedCornerShape(12.dp),
             color = Color(0xFFFFD166),
-            modifier = Modifier.clickable { onAuthClick() }.testTag("navbar_login_button")
+            modifier = Modifier
+              .clickable { onAuthOrProfileClick() }
+              .testTag("navbar_login_button")
           ) {
             Row(
               modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -677,43 +903,40 @@ fun BikroyStyleHeader(
             }
           }
         } else {
+          // After login: Hide Login button and show User Profile / Panel button
           Surface(
             shape = RoundedCornerShape(14.dp),
-            color = Color.White.copy(alpha = 0.22f),
-            modifier = Modifier.clickable { onAuthClick() }.testTag("navbar_user_profile_chip")
+            color = Color(0xFFFFD166),
+            modifier = Modifier
+              .clickable { onAuthOrProfileClick() }
+              .testTag("navbar_user_profile_chip")
           ) {
             Row(
-              modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
               verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(4.dp)
+              horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
               Box(
                 modifier = Modifier
-                  .size(20.dp)
+                  .size(22.dp)
                   .clip(CircleShape)
-                  .background(Color.White),
+                  .background(Color(0xFF007A64)),
                 contentAlignment = Alignment.Center
               ) {
                 Text(
                   text = currentUser.displayName.take(1).uppercase(),
-                  color = Color(0xFF007A64),
-                  fontWeight = FontWeight.Bold,
+                  color = Color.White,
+                  fontWeight = FontWeight.ExtraBold,
                   fontSize = 11.sp
                 )
               }
               Text(
-                text = currentUser.displayName.take(7),
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-                color = Color.White,
+                text = if (isBangla) "প্রোফাইল প্যানেল" else "User Panel",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 12.sp,
+                color = Color(0xFF0F172A),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-              )
-              Icon(
-                imageVector = Icons.AutoMirrored.Filled.Logout,
-                contentDescription = "লগআউট",
-                tint = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.size(12.dp)
               )
             }
           }
@@ -775,7 +998,7 @@ fun BikroyStyleHeader(
 }
 
 /**
- * Neat, organized Bikroy-style 3x2 Category Grid with clear icons and labels.
+ * Neat, organized Bikroy-style Category Grid with all categories including Pets, Clothing, Cosmetics, Food, and Others.
  */
 @Composable
 fun BikroyCategoryGrid(
@@ -792,16 +1015,30 @@ fun BikroyCategoryGrid(
     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
   ) {
     Column(modifier = Modifier.padding(12.dp)) {
-      Text(
-        text = if (isBangla) "ক্যাটাগরি সমূহ" else "All Categories",
-        fontWeight = FontWeight.Bold,
-        fontSize = 15.sp,
-        color = Color(0xFF1E293B),
-        modifier = Modifier.padding(bottom = 10.dp, start = 4.dp)
-      )
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(bottom = 10.dp, start = 4.dp, end = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text(
+          text = if (isBangla) "ক্যাটাগরি সমূহ" else "All Categories",
+          fontWeight = FontWeight.Bold,
+          fontSize = 15.sp,
+          color = Color(0xFF1E293B)
+        )
+        Text(
+          text = if (isBangla) "${BIKROY_CATEGORY_LIST.size - 1}টি বিভাগ" else "${BIKROY_CATEGORY_LIST.size - 1} Categories",
+          fontSize = 11.sp,
+          fontWeight = FontWeight.SemiBold,
+          color = Color(0xFF007A64)
+        )
+      }
 
-      // 3x2 Grid
-      val rows = BIKROY_CATEGORY_LIST.chunked(3)
+      // 4-column responsive grid for all 11 category tiles
+      val columns = 4
+      val rows = BIKROY_CATEGORY_LIST.chunked(columns)
       for (rowItems in rows) {
         Row(
           modifier = Modifier
@@ -819,6 +1056,10 @@ fun BikroyCategoryGrid(
               modifier = Modifier.weight(1f)
             )
           }
+          val remaining = columns - rowItems.size
+          repeat(remaining) {
+            Spacer(modifier = Modifier.weight(1f))
+          }
         }
       }
     }
@@ -834,18 +1075,24 @@ fun BikroyCategoryItemTile(
   modifier: Modifier = Modifier
 ) {
   val icon: ImageVector = when (item.iconType) {
+    "all" -> Icons.Default.GridView
     "phone" -> Icons.Default.PhoneAndroid
-    "laptop" -> Icons.Default.Laptop
+    "laptop" -> Icons.Default.LaptopMac
     "bike" -> Icons.Default.TwoWheeler
     "tv" -> Icons.Default.Tv
     "furniture" -> Icons.Default.Weekend
+    "pets" -> Icons.Default.Pets
+    "clothing" -> Icons.Default.Checkroom
+    "cosmetics" -> Icons.Default.AutoAwesome
+    "food" -> Icons.Default.Restaurant
+    "others" -> Icons.Default.Category
     else -> Icons.Default.Widgets
   }
 
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     modifier = modifier
-      .padding(horizontal = 4.dp)
+      .padding(horizontal = 3.dp)
       .clip(RoundedCornerShape(12.dp))
       .background(if (isSelected) Color(0xFF007A64).copy(alpha = 0.08f) else Color.Transparent)
       .border(
@@ -857,10 +1104,9 @@ fun BikroyCategoryItemTile(
       .padding(vertical = 8.dp)
       .testTag("category_chip_${item.id}")
   ) {
-    // Tinted circular icon container
     Box(
       modifier = Modifier
-        .size(46.dp)
+        .size(44.dp)
         .clip(CircleShape)
         .background(Color(item.accentColor).copy(alpha = if (isSelected) 0.25f else 0.12f)),
       contentAlignment = Alignment.Center
@@ -869,7 +1115,7 @@ fun BikroyCategoryItemTile(
         imageVector = icon,
         contentDescription = null,
         tint = Color(item.accentColor),
-        modifier = Modifier.size(24.dp)
+        modifier = Modifier.size(22.dp)
       )
     }
 
@@ -888,20 +1134,22 @@ fun BikroyCategoryItemTile(
 }
 
 /**
- * Bikroy-style horizontal listing card. Clean, uncluttered, professional e-commerce card.
+ * Bikroy-style horizontal listing card with owner/admin quick edit badge.
  */
 @Composable
 fun BikroyListingCard(
   product: MarketProduct,
   isBangla: Boolean,
   isSaved: Boolean,
+  canModify: Boolean = false,
   onToggleSave: () -> Unit,
+  onEditClick: () -> Unit = {},
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   val primaryPhoto = product.photos.firstOrNull() ?: ProductPhoto(
     id = "card_photo_${product.id}",
-    studioPresetId = product.categoryId.coerceIn(1, 8)
+    studioPresetId = product.categoryId.coerceIn(1, 13)
   )
 
   Card(
@@ -989,18 +1237,52 @@ fun BikroyListingCard(
           )
         }
 
-        // Condition badge
-        Surface(
-          shape = RoundedCornerShape(4.dp),
-          color = Color(0xFFF1F5F9),
+        // Condition & Ownership badge row
+        Row(
+          horizontalArrangement = Arrangement.spacedBy(6.dp),
+          verticalAlignment = Alignment.CenterVertically,
           modifier = Modifier.padding(top = 1.dp)
         ) {
-          Text(
-            text = product.condition,
-            fontSize = 11.sp,
-            color = Color(0xFF475569),
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-          )
+          Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = Color(0xFFF1F5F9)
+          ) {
+            Text(
+              text = product.condition,
+              fontSize = 11.sp,
+              color = Color(0xFF475569),
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+          }
+
+          if (canModify) {
+            Surface(
+              shape = RoundedCornerShape(4.dp),
+              color = Color(0xFF007A64).copy(alpha = 0.12f),
+              modifier = Modifier
+                .clickable { onEditClick() }
+                .testTag("card_edit_badge_${product.id}")
+            ) {
+              Row(
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Edit,
+                  contentDescription = null,
+                  tint = Color(0xFF007A64),
+                  modifier = Modifier.size(11.dp)
+                )
+                Text(
+                  text = if (isBangla) "এডিট" else "Edit",
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFF007A64)
+                )
+              }
+            }
+          }
         }
 
         // Price & Favorite row
@@ -1015,7 +1297,7 @@ fun BikroyListingCard(
             text = "Tk ${product.priceBdt}",
             fontWeight = FontWeight.ExtraBold,
             fontSize = 17.sp,
-            color = Color(0xFF007A64) // Signature Bikroy Price color
+            color = Color(0xFF007A64)
           )
 
           IconButton(

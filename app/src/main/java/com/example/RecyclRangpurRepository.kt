@@ -51,7 +51,7 @@ data class FirestoreListing(
       val uriStr = photoUris.getOrNull(index)?.takeIf { it.isNotBlank() }
       ProductPhoto(
         id = "${id}_photo_$index",
-        studioPresetId = presetLong.toInt().coerceIn(1, 8),
+        studioPresetId = presetLong.toInt().coerceIn(1, 13),
         captionBn = caption,
         captionEn = caption,
         uriString = uriStr
@@ -67,7 +67,7 @@ data class FirestoreListing(
       condition = condition,
       locationBn = locationBn,
       locationEn = locationEn,
-      categoryId = categoryId.toInt().coerceIn(1, 5),
+      categoryId = categoryId.toInt().coerceIn(1, 10),
       isNegotiable = isNegotiable,
       phone = phone,
       sellerName = sellerName,
@@ -81,7 +81,8 @@ data class FirestoreListing(
       postedAgoEn = "Cloud Synced",
       isVerifiedSeller = true,
       allowWhatsapp = true,
-      isUserCreated = true
+      isUserCreated = true,
+      ownerUid = userId
     )
   }
 }
@@ -181,7 +182,7 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
       ?: "listing_${UUID.randomUUID().toString().replace("-", "").take(16)}"
     val docRef = db.collection("listings").document(docId)
 
-    val presetIds = product.photos.take(5).map { it.studioPresetId.coerceIn(1, 8).toLong() }
+    val presetIds = product.photos.take(5).map { it.studioPresetId.coerceIn(1, 13).toLong() }
       .ifEmpty { listOf(1L) }
     val captions = product.photos.take(5).map { it.captionBn.take(100).ifBlank { "পণ্যের ছবি" } }
       .ifEmpty { listOf("পণ্যের ছবি") }
@@ -227,7 +228,7 @@ class RecyclRangpurRepository(private val db: FirebaseFirestore) {
     require(docId.isNotBlank()) { "Document ID must not be blank" }
     val docRef = db.collection("listings").document(docId)
 
-    val presetIds = product.photos.take(5).map { it.studioPresetId.coerceIn(1, 8).toLong() }
+    val presetIds = product.photos.take(5).map { it.studioPresetId.coerceIn(1, 13).toLong() }
       .ifEmpty { listOf(1L) }
     val captions = product.photos.take(5).map { it.captionBn.take(100).ifBlank { "পণ্যের ছবি" } }
       .ifEmpty { listOf("পণ্যের ছবি") }
