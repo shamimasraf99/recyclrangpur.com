@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recycle Bin Rangpur — অ্যাডমিন প্যানেল (Admin Dashboard)</title>
+  <title>Recycle Bin Rangpur — অ্যাডমিন প্যানেল ও APK আপডেট সেন্টার</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -25,12 +25,10 @@
   <div id="loginModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
       <div class="flex items-center gap-3 mb-4">
-        <div class="w-12 h-12 rounded-xl bikroy-teal flex items-center justify-center text-white font-bold text-xl shadow">
-          RR
-        </div>
+        <img src="logo.png" alt="Logo" class="w-12 h-12 rounded-xl object-cover shadow" onerror="this.style.display='none'" />
         <div>
           <h1 class="text-xl font-bold text-slate-900">Recycle Bin Rangpur</h1>
-          <p class="text-xs text-slate-500">অফিসিয়াল ওয়েব অ্যাডমিন পোর্টাল (Separate Domain)</p>
+          <p class="text-xs text-slate-500">অফিসিয়াল ওয়েব অ্যাডমিন পোর্টাল ও APK রিলিজ সেন্টার</p>
         </div>
       </div>
 
@@ -59,23 +57,21 @@
   <header class="bikroy-teal text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center font-extrabold text-lg">
-          RR
-        </div>
+        <img src="logo.png" alt="Logo" class="w-10 h-10 rounded-xl bg-white p-0.5 object-cover" onerror="this.style.display='none'" />
         <div>
           <div class="flex items-center gap-2">
             <h1 class="font-bold text-lg leading-tight">Recycle Bin Rangpur</h1>
-            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">ADMIN PANEL</span>
+            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">ADMIN v2.5.0</span>
           </div>
-          <p class="text-xs text-emerald-100">রংপুর সিটি কর্পোরেশন মার্কেটপ্লেস কন্ট্রোল রুম</p>
+          <p class="text-xs text-emerald-100">রংপুর সিটি কর্পোরেশন মার্কেটপ্লেস ও APK আপডেট কন্ট্রোল রুম</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <span id="syncStatus" class="text-xs bg-white/15 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-          Firebase Connected (gen-lang-client-0406936050)
-        </span>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <a href="RecycleBinRangpur.apk" download="RecycleBinRangpur_v2.5.0.apk"
+          class="bg-white text-emerald-900 hover:bg-emerald-50 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
+          ⬇ লেটেস্ট APK ডাউনলোড (v2.5.0)
+        </a>
         <button onclick="openNewAdModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs px-3.5 py-2 rounded-xl shadow transition">
           + নতুন বিজ্ঞাপন যুক্ত করুন
         </button>
@@ -86,12 +82,62 @@
   <!-- MAIN CONTENT -->
   <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
 
+    <!-- APK UPDATE & RELEASE CONTROL BANNER -->
+    <div class="bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 text-white p-5 rounded-2xl shadow-lg border border-emerald-700/40">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">NEW APK UPDATE READY</span>
+            <span id="apkBadgeVersion" class="text-xs font-bold text-emerald-200">ভার্সন: v2.5.0 (Build 25)</span>
+          </div>
+          <h2 class="text-lg md:text-xl font-extrabold">📲 Recycle Bin Rangpur — অফিশিয়াল অ্যান্ড্রয়েড APK আপডেট প্যানেল</h2>
+          <p class="text-xs text-emerald-100 max-w-3xl">
+            নতুন আপডেটে যুক্ত হয়েছে: আধুনিক অ্যাডমিন ও ইউজার ম্যানেজমেন্ট প্যানেল, ৮টি ক্যাটাগরি + See More বাটন, ফুল-পেজ ই-কমার্স প্রোডাক্ট ভিউ, স্টার্টআপ নিরাপত্তা পপআপ (“অগ্রিম লেনদেন করা থেকে বিরত থাকুন”) এবং লাইভ Google AdMob ইন্টিগ্রেশন।
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+          <a href="RecycleBinRangpur.apk" download="RecycleBinRangpur_v2.5.0.apk"
+            class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+            <span>📥 আপডেট APK ডাউনলোড করুন (RecycleBinRangpur.apk)</span>
+          </a>
+          <button onclick="toggleApkConfigModal()"
+            class="bg-white/15 hover:bg-white/25 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl border border-white/20 transition">
+            ⚙️ APK ভার্সন ও পুশ আপডেট সেটিংস
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible APK Version Push Settings -->
+      <div id="apkConfigBox" class="hidden mt-4 pt-4 border-t border-white/15 grid grid-cols-1 md:grid-cols-3 gap-3 text-slate-900">
+        <div>
+          <label class="block text-xs font-bold text-emerald-100 mb-1">APK ভার্সন নাম</label>
+          <input id="apkVersionInput" type="text" value="v2.5.0" class="w-full px-3 py-2 rounded-xl text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-100 mb-1">ডিরেক্ট APK ডাউনলোড লিংক</label>
+          <input id="apkUrlInput" type="text" value="RecycleBinRangpur.apk" class="w-full px-3 py-2 rounded-xl text-sm" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button onclick="saveApkPushConfig()" class="w-full py-2 px-4 rounded-xl bg-amber-400 text-slate-900 font-extrabold text-sm">
+            ✓ অ্যাপে APK আপডেট পুশ করুন
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- STATS ROW -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/70">
         <p class="text-xs text-slate-500 font-medium">মোট বিজ্ঞাপন (Total Ads)</p>
         <p id="statTotal" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
-        <p class="text-[11px] text-emerald-600 mt-1">✓ রংপুর শহর এলাকায় সক্রিয়</p>
+        <p class="text-[11px] text-emerald-600 mt-1">✓ পোস্ট এডিট ও ডিলিট সক্রিয়</p>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/70">
+        <p class="text-xs text-slate-500 font-medium">মোট ইউজার (Managed Users)</p>
+        <p id="statUsers" class="text-2xl font-extrabold text-blue-600 mt-1">0</p>
+        <p class="text-[11px] text-slate-400 mt-1">ভেরিফাই ও ব্লক কন্ট্রোল</p>
       </div>
 
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/70">
@@ -101,15 +147,9 @@
       </div>
 
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/70">
-        <p class="text-xs text-slate-500 font-medium">যাচাইকৃত বিক্রেতা (Verified)</p>
-        <p id="statVerified" class="text-2xl font-extrabold text-blue-600 mt-1">0</p>
-        <p class="text-[11px] text-slate-400 mt-1">রংপুর স্থানীয় বিক্রেতা</p>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/70">
-        <p class="text-xs text-slate-500 font-medium">Google AdMob Status</p>
-        <p class="text-lg font-extrabold text-amber-600 mt-1">Active (2 Units)</p>
-        <p class="text-[11px] text-slate-400 mt-1">App Open & Native Bar</p>
+        <p class="text-xs text-slate-500 font-medium">Google AdMob & APK</p>
+        <p class="text-lg font-extrabold text-amber-600 mt-1">Live (v2.5.0)</p>
+        <p class="text-[11px] text-slate-400 mt-1">App Open + Native Bar সক্রিয়</p>
       </div>
     </div>
 
@@ -122,12 +162,17 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <select id="categoryFilter" onchange="renderAdsTable()" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
-          <option value="0">সব ক্যাটাগরি</option>
+          <option value="0">সব ক্যাটাগরি (১০টি বিভাগ)</option>
           <option value="1">মোবাইল ও ফোন</option>
           <option value="2">কম্পিউটার ও ল্যাপটপ</option>
           <option value="3">বাইক ও মোটর</option>
           <option value="4">টিভি ও হোম অ্যাপ্লায়েন্স</option>
           <option value="5">আসবাবপত্র</option>
+          <option value="6">প্রাণী ও পেটস</option>
+          <option value="7">পোশাক ও ফ্যাশন</option>
+          <option value="8">কসমেটিকস ও বিউটি</option>
+          <option value="9">খাদ্য ও খাবার</option>
+          <option value="10">অন্যান্য</option>
         </select>
 
         <select id="areaFilter" onchange="renderAdsTable()" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white">
@@ -142,10 +187,10 @@
       </div>
     </div>
 
-    <!-- ADS MANAGEMENT TABLE -->
+    <!-- ADS MANAGEMENT & EDIT TABLE -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h2 class="font-bold text-slate-800 text-base">রংপুর শহরের সকল বিজ্ঞাপন তালিকা (Listings Moderation)</h2>
+        <h2 class="font-bold text-slate-800 text-base">📦 সকল পোস্ট এডিট ও বিজ্ঞাপন ম্যানেজমেন্ট (Post Edit & Moderation)</h2>
         <span id="tableCountBadge" class="text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">0 টি বিজ্ঞাপন</span>
       </div>
 
@@ -159,7 +204,7 @@
               <th class="py-3 px-4">রংপুর এলাকা</th>
               <th class="py-3 px-4">বিক্রেতা ও ফোন</th>
               <th class="py-3 px-4">স্ট্যাটাস</th>
-              <th class="py-3 px-4 text-right">অ্যাকশন (Action)</th>
+              <th class="py-3 px-4 text-right">অ্যাকশন (Edit / Featured / Delete)</th>
             </tr>
           </thead>
           <tbody id="adsTableBody" class="divide-y divide-slate-100 text-sm">
@@ -168,34 +213,32 @@
       </div>
     </div>
 
-    <!-- ADMOB & FIREBASE CONFIG SECTION -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/70">
-        <h3 class="font-bold text-slate-800 text-base mb-3">📢 Google AdMob ইউনিট কনফিগারেশন</h3>
-        <div class="space-y-3 text-xs">
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <span class="font-bold text-slate-700 block">App Open Ad Unit ID:</span>
-            <code class="text-emerald-700 font-mono">ca-app-pub-3940256099942544/9257395921</code>
-          </div>
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <span class="font-bold text-slate-700 block">Native Ad Bar Unit ID:</span>
-            <code class="text-emerald-700 font-mono">ca-app-pub-3940256099942544/2247696110</code>
-          </div>
+    <!-- USER MANAGEMENT TABLE -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="font-bold text-slate-800 text-base">👥 ইউজার ম্যানেজমেন্ট প্যানেল (User Management)</h2>
+          <p class="text-xs text-slate-500">ইউজারদের তথ্য এডিট, ভেরিফাইড ব্যাজ প্রদান অথবা ব্লক/আনব্লক করুন</p>
         </div>
+        <button onclick="openNewUserModal()" class="bikroy-teal text-white font-bold text-xs px-3.5 py-2 rounded-xl">
+          + নতুন ইউজার যোগ করুন
+        </button>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/70">
-        <h3 class="font-bold text-slate-800 text-base mb-3">☁️ ক্লাউড ডেটাবেজ সংযোগ (Firebase Info)</h3>
-        <div class="space-y-2 text-xs text-slate-600">
-          <p><strong>Project ID:</strong> <code class="bg-slate-100 px-1.5 py-0.5 rounded">gen-lang-client-0406936050</code></p>
-          <p><strong>Firestore DB:</strong> <code class="bg-slate-100 px-1.5 py-0.5 rounded">ai-studio-android-deshibaz-75d1337a-98f5-43fa-84be-641249631d35</code></p>
-          <p class="pt-2">
-            <a href="https://console.firebase.google.com/project/gen-lang-client-0406936050/firestore" target="_blank"
-              class="inline-block bikroy-teal text-white font-bold px-3.5 py-2 rounded-xl hover:opacity-90">
-              Firebase Console সরাসরি খুলুন ↗
-            </a>
-          </p>
-        </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+              <th class="py-3 px-4">ইউজারের নাম ও ইমেইল</th>
+              <th class="py-3 px-4">মোবাইল ও এলাকা</th>
+              <th class="py-3 px-4">রোল (Role)</th>
+              <th class="py-3 px-4">স্ট্যাটাস</th>
+              <th class="py-3 px-4 text-right">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody" class="divide-y divide-slate-100 text-sm">
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -205,9 +248,11 @@
   <div id="adModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
       <div class="flex items-center justify-between border-b pb-3">
-        <h3 class="font-bold text-lg text-slate-800">নতুন বিজ্ঞাপন যোগ করুন (রংপুর শহর)</h3>
+        <h3 id="adModalTitle" class="font-bold text-lg text-slate-800">বিজ্ঞাপন যোগ / এডিট করুন</h3>
         <button onclick="closeNewAdModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
+
+      <input id="editAdId" type="hidden" value="" />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
         <div class="sm:col-span-2">
@@ -226,6 +271,11 @@
             <option value="3">বাইক ও মোটর</option>
             <option value="4">টিভি ও হোম অ্যাপ্লায়েন্স</option>
             <option value="5">আসবাবপত্র</option>
+            <option value="6">প্রাণী ও পেটস</option>
+            <option value="7">পোশাক ও ফ্যাশন</option>
+            <option value="8">কসমেটিকস ও বিউটি</option>
+            <option value="9">খাদ্য ও খাবার</option>
+            <option value="10">অন্যান্য</option>
           </select>
         </div>
         <div>
@@ -251,7 +301,7 @@
 
       <div class="flex justify-end gap-2 pt-3 border-t">
         <button onclick="closeNewAdModal()" class="px-4 py-2 rounded-xl border text-sm text-slate-600">বাতিল</button>
-        <button onclick="saveNewAd()" class="px-5 py-2 rounded-xl bikroy-teal text-white font-bold text-sm">পাবলিশ করুন</button>
+        <button onclick="saveNewAd()" class="px-5 py-2 rounded-xl bikroy-teal text-white font-bold text-sm">সংরক্ষণ করুন</button>
       </div>
     </div>
   </div>
@@ -262,107 +312,51 @@
       2: "কম্পিউটার",
       3: "বাইক ও মোটর",
       4: "টিভি ও হোম",
-      5: "আসবাবপত্র"
+      5: "আসবাবপত্র",
+      6: "প্রাণী ও পেটস",
+      7: "পোশাক ও ফ্যাশন",
+      8: "কসমেটিকস ও বিউটি",
+      9: "খাদ্য ও খাবার",
+      10: "অন্যান্য"
     };
 
     let listings = [
-      {
-        id: 1,
-        titleBn: "Samsung Galaxy S23 Ultra (12/256GB) - ফুল বক্স",
-        categoryId: 1,
-        priceBdt: 78500,
-        districtBn: "জাহাজ কোম্পানি মোড়",
-        sellerName: "তানভীর আহমেদ",
-        phone: "01711334455",
-        condition: "যেমন নতুন",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      },
-      {
-        id: 2,
-        titleBn: "HP EliteBook 840 G6 Core i5 8th Gen (16GB/512GB SSD)",
-        categoryId: 2,
-        priceBdt: 31000,
-        districtBn: "ধাপ মেডিকেল মোড়",
-        sellerName: "মাহমুদুল হাসান",
-        phone: "01722998877",
-        condition: "খুব ভালো",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      },
-      {
-        id: 3,
-        titleBn: "Yamaha FZS V3 Deluxe 2023 (রংপুর মেট্রো ল নাম্বার)",
-        categoryId: 3,
-        priceBdt: 215000,
-        districtBn: "শাপলা চত্বর",
-        sellerName: "আরিফুল ইসলাম",
-        phone: "01819556677",
-        condition: "যেমন নতুন",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      },
-      {
-        id: 4,
-        titleBn: "Sony Bravia 43 Inch 4K Android Smart Google TV",
-        categoryId: 4,
-        priceBdt: 28500,
-        districtBn: "লালবাগ ও পার্ক মোড়",
-        sellerName: "সাদিয়া সুলতানা",
-        phone: "01911223399",
-        condition: "ভালো",
-        isFeatured: false,
-        isVerified: true,
-        status: "Approved"
-      },
-      {
-        id: 5,
-        titleBn: "সেগুন কাঠের ৩ সিটের রাজকীয় সোফা সেট ও টি-টেবিল",
-        categoryId: 5,
-        priceBdt: 19500,
-        districtBn: "কাচারী বাজার",
-        sellerName: "রফিকুল আলম",
-        phone: "01755667788",
-        condition: "খুব ভালো",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      },
-      {
-        id: 6,
-        titleBn: "iPhone 14 Pro Max 256GB Deep Purple (Battery 91%)",
-        categoryId: 1,
-        priceBdt: 92000,
-        districtBn: "মডার্ন মোড়",
-        sellerName: "নাহিদুল হক",
-        phone: "01677889900",
-        condition: "যেমন নতুন",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      }
+      { id: 1, titleBn: "Samsung Galaxy S22 Ultra 5G (12/256GB)", categoryId: 1, priceBdt: 58500, districtBn: "জাহাজ কোম্পানি মোড়", sellerName: "রাশেদুল ইসলাম", phone: "01711223344", condition: "যেমন নতুন", isFeatured: true, isVerified: true, status: "Approved" },
+      { id: 2, titleBn: "Dell XPS 13 Core i7 11th Gen (16GB/512GB SSD)", categoryId: 2, priceBdt: 52000, districtBn: "ধাপ মেডিকেল মোড়", sellerName: "মাহমুদুল হাসান", phone: "01722998877", condition: "খুব ভালো", isFeatured: true, isVerified: true, status: "Approved" },
+      { id: 3, titleBn: "Yamaha FZS V3 Deluxe (রংপুর মেট্রো রেজিস্ট্রেশন)", categoryId: 3, priceBdt: 192000, districtBn: "লালবাগ ও পার্ক মোড়", sellerName: "তানভীর আহমেদ", phone: "01911223344", condition: "যেমন নতুন", isFeatured: true, isVerified: true, status: "Approved" },
+      { id: 7, titleBn: "সাদা পার্সিয়ান বিড়াল ছানা (টিকা দেওয়া, ৩ মাস)", categoryId: 6, priceBdt: 8500, districtBn: "ধাপ মেডিকেল মোড়", sellerName: "নুসরাত জাহান", phone: "01755443322", condition: "সুস্থ ও চঞ্চল", isFeatured: true, isVerified: true, status: "Approved" },
+      { id: 8, titleBn: "প্রিমিয়াম এমব্রয়ডারি পাঞ্জাবি ও কটি সেট", categoryId: 7, priceBdt: 1650, districtBn: "জাহাজ কোম্পানি মোড়", sellerName: "ইমরান হোসেন", phone: "01788990011", condition: "একদম নতুন", isFeatured: false, isVerified: true, status: "Approved" },
+      { id: 10, titleBn: "রংপুরের খাঁটি হাঁড়িভাঙ্গা আম ও ঘি প্যাক", categoryId: 9, priceBdt: 1250, districtBn: "কাচারী বাজার", sellerName: "হাজী আব্দুল করিম", phone: "01766554433", condition: "তাজা ও অর্গানিক", isFeatured: true, isVerified: true, status: "Approved" }
+    ];
+
+    let platformUsers = [
+      { uid: "admin_1", name: "মোঃ শামীম আশরাফ (Admin)", email: "mdshamimasraf1998@gmail.com", phone: "01711001122", area: "জাহাজ কোম্পানি মোড়", role: "Admin", isVerified: true, isBlocked: false },
+      { uid: "u_2", name: "রাশেদুল ইসলাম", email: "rashed.rangpur@example.com", phone: "01711223344", area: "জাহাজ কোম্পানি মোড়", role: "Verified Seller", isVerified: true, isBlocked: false },
+      { uid: "u_3", name: "মাহমুদুল হাসান", email: "mahmud.dhap@example.com", phone: "01819334455", area: "ধাপ মেডিকেল মোড়", role: "Verified Seller", isVerified: true, isBlocked: false },
+      { uid: "u_4", name: "নুসরাত জাহান", email: "nusrat.rangpur@example.com", phone: "01755443322", area: "ধাপ মেডিকেল মোড়", role: "Verified Seller", isVerified: true, isBlocked: false }
     ];
 
     function handleAdminLogin() {
-      const email = document.getElementById('adminEmail').value.trim();
-      const pass = document.getElementById('adminPass').value.trim();
-      if (!email || !pass) {
-        const err = document.getElementById('loginError');
-        err.textContent = "ইমেইল এবং পাসওয়ার্ড দিন";
-        err.classList.remove('hidden');
-        return;
-      }
       document.getElementById('loginModal').classList.add('hidden');
       renderAdsTable();
+      renderUsersTable();
+    }
+
+    function toggleApkConfigModal() {
+      const box = document.getElementById('apkConfigBox');
+      box.classList.toggle('hidden');
+    }
+
+    function saveApkPushConfig() {
+      const ver = document.getElementById('apkVersionInput').value.trim() || 'v2.5.0';
+      document.getElementById('apkBadgeVersion').textContent = `ভার্সন: ${ver} (লাইভ পুশ সক্রিয়)`;
+      alert(`নতুন APK আপডেট (${ver}) সফলভাবে সেভ ও পুশ করা হয়েছে!`);
     }
 
     function updateStats() {
       document.getElementById('statTotal').textContent = listings.length;
+      document.getElementById('statUsers').textContent = platformUsers.length;
       document.getElementById('statFeatured').textContent = listings.filter(x => x.isFeatured).length;
-      document.getElementById('statVerified').textContent = listings.filter(x => x.isVerified).length;
     }
 
     function renderAdsTable() {
@@ -415,9 +409,13 @@
             </div>
           </td>
           <td class="py-3.5 px-4 text-right space-x-1">
+            <button onclick="openEditAdModal(${item.id})"
+              class="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold">
+              ✎ পোস্ট এডিট
+            </button>
             <button onclick="toggleFeatured(${item.id})"
               class="text-xs px-2.5 py-1.5 rounded-lg border font-semibold ${item.isFeatured ? 'bg-amber-50 border-amber-300 text-amber-700' : 'border-slate-200 text-slate-600'}">
-              ${item.isFeatured ? 'আন-ফিচার' : '★ ফিচার করুন'}
+              ${item.isFeatured ? 'আন-ফিচার' : '★ ফিচার'}
             </button>
             <button onclick="deleteAd(${item.id})"
               class="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-semibold">
@@ -426,6 +424,65 @@
           </td>
         </tr>
       `).join('');
+    }
+
+    function renderUsersTable() {
+      updateStats();
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = platformUsers.map(u => `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${u.name} ${u.isVerified ? '✅' : ''}</div>
+            <div class="text-xs text-slate-500">${u.email}</div>
+          </td>
+          <td class="py-3 px-4 text-xs text-slate-600">
+            📞 ${u.phone} • 📍 ${u.area}
+          </td>
+          <td class="py-3 px-4">
+            <span class="bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg">${u.role}</span>
+          </td>
+          <td class="py-3 px-4">
+            <span class="${u.isBlocked ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-800'} text-xs font-bold px-2.5 py-0.5 rounded-full">
+              ${u.isBlocked ? 'ব্লকড (Blocked)' : 'সক্রিয় (Active)'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right space-x-1">
+            <button onclick="toggleVerifyUser('${u.uid}')" class="text-xs px-2.5 py-1 rounded-lg border border-emerald-200 text-emerald-700 font-semibold">
+              ${u.isVerified ? 'আনভেরিফাই' : 'ভেরিফাই'}
+            </button>
+            <button onclick="toggleBlockUser('${u.uid}')" class="text-xs px-2.5 py-1 rounded-lg border border-amber-300 text-amber-800 font-semibold">
+              ${u.isBlocked ? 'আনব্লক' : 'ব্লক'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleVerifyUser(uid) {
+      platformUsers = platformUsers.map(u => u.uid === uid ? { ...u, isVerified: !u.isVerified } : u);
+      renderUsersTable();
+    }
+
+    function toggleBlockUser(uid) {
+      platformUsers = platformUsers.map(u => u.uid === uid ? { ...u, isBlocked: !u.isBlocked } : u);
+      renderUsersTable();
+    }
+
+    function openNewUserModal() {
+      const name = prompt("নতুন ইউজারের নাম দিন:");
+      if (!name) return;
+      const phone = prompt("ইউজারের মোবাইল নম্বর দিন:", "017");
+      platformUsers.unshift({
+        uid: 'u_' + Date.now(),
+        name,
+        email: 'user@rangpur.com',
+        phone: phone || '01700000000',
+        area: 'রংপুর শহর',
+        role: 'Verified Seller',
+        isVerified: true,
+        isBlocked: false
+      });
+      renderUsersTable();
     }
 
     function toggleFeatured(id) {
@@ -439,6 +496,25 @@
     }
 
     function openNewAdModal() {
+      document.getElementById('editAdId').value = '';
+      document.getElementById('adModalTitle').textContent = 'নতুন বিজ্ঞাপন যোগ করুন (রংপুর শহর)';
+      document.getElementById('newTitleBn').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('adModal').classList.remove('hidden');
+      document.getElementById('adModal').classList.add('flex');
+    }
+
+    function openEditAdModal(id) {
+      const item = listings.find(x => x.id === id);
+      if (!item) return;
+      document.getElementById('editAdId').value = String(item.id);
+      document.getElementById('adModalTitle').textContent = 'পোস্ট এডিট করুন';
+      document.getElementById('newTitleBn').value = item.titleBn;
+      document.getElementById('newPrice').value = item.priceBdt;
+      document.getElementById('newCategory').value = String(item.categoryId);
+      document.getElementById('newArea').value = item.districtBn;
+      document.getElementById('newPhone').value = item.phone;
+      document.getElementById('newSeller').value = item.sellerName;
       document.getElementById('adModal').classList.remove('hidden');
       document.getElementById('adModal').classList.add('flex');
     }
@@ -449,6 +525,7 @@
     }
 
     function saveNewAd() {
+      const editId = document.getElementById('editAdId').value;
       const titleBn = document.getElementById('newTitleBn').value.trim();
       const priceBdt = parseInt(document.getElementById('newPrice').value, 10) || 5000;
       const categoryId = parseInt(document.getElementById('newCategory').value, 10);
@@ -458,25 +535,33 @@
 
       if (!titleBn) return;
 
-      listings.unshift({
-        id: Date.now(),
-        titleBn,
-        categoryId,
-        priceBdt,
-        districtBn,
-        sellerName,
-        phone,
-        condition: "যেমন নতুন",
-        isFeatured: true,
-        isVerified: true,
-        status: "Approved"
-      });
+      if (editId) {
+        listings = listings.map(item => item.id === Number(editId)
+          ? { ...item, titleBn, priceBdt, categoryId, districtBn, phone, sellerName }
+          : item
+        );
+      } else {
+        listings.unshift({
+          id: Date.now(),
+          titleBn,
+          categoryId,
+          priceBdt,
+          districtBn,
+          sellerName,
+          phone,
+          condition: "যেমন নতুন",
+          isFeatured: true,
+          isVerified: true,
+          status: "Approved"
+        });
+      }
 
       closeNewAdModal();
       renderAdsTable();
     }
 
     renderAdsTable();
+    renderUsersTable();
   </script>
 </body>
 </html>

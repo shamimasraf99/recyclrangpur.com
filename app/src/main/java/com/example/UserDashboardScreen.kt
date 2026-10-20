@@ -49,6 +49,9 @@ fun UserDashboardScreen(
   onDeleteUser: (ManagedPlatformUser) -> Unit,
   onTriggerAppOpenAd: () -> Unit,
   onTriggerSafetyPopup: () -> Unit,
+  apkUpdateConfig: ApkUpdateConfig = ApkUpdateConfig(),
+  onUpdateApkConfig: (ApkUpdateConfig) -> Unit = {},
+  onTriggerApkUpdatePopup: () -> Unit = {},
   onLogoutClick: () -> Unit,
   onBackToHome: () -> Unit
 ) {
@@ -78,6 +81,13 @@ fun UserDashboardScreen(
   // User Add/Edit Modal state
   var userBeingEdited by remember { mutableStateOf<ManagedPlatformUser?>(null) }
   var isAddingNewUser by remember { mutableStateOf(false) }
+
+  // Editable APK Update fields for Admin Panel
+  var editApkVersion by remember(apkUpdateConfig.versionName) { mutableStateOf(apkUpdateConfig.versionName) }
+  var editApkUrl by remember(apkUpdateConfig.downloadUrl) { mutableStateOf(apkUpdateConfig.downloadUrl) }
+  var editApkNotes by remember(apkUpdateConfig.releaseNotesBn) { mutableStateOf(apkUpdateConfig.releaseNotesBn) }
+  var editForceUpdate by remember(apkUpdateConfig.isForceUpdate) { mutableStateOf(apkUpdateConfig.isForceUpdate) }
+  var apkSaveSuccessMsg by remember { mutableStateOf<String?>(null) }
 
   val filteredAdminPosts = remember(allProducts, postSearchQuery) {
     if (postSearchQuery.isBlank()) {
@@ -341,13 +351,105 @@ fun UserDashboardScreen(
       }
     }
 
+    // 2.5 Quick APK Update Banner in Admin Panel
+    item(key = "admin_apk_quick_banner") {
+      Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5)),
+        border = BorderStroke(1.dp, Color(0xFF6EE7B7)),
+        modifier = Modifier
+          .fillMaxWidth()
+          .testTag("admin_apk_quick_banner_card")
+      ) {
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(14.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.weight(1f)
+          ) {
+            Box(
+              modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF007A64)),
+              contentAlignment = Alignment.Center
+            ) {
+              Icon(
+                imageVector = Icons.Default.SystemUpdate,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(22.dp)
+              )
+            }
+            Column {
+              Text(
+                text = if (isBangla)
+                  "অ্যাপ APK আপডেট (${apkUpdateConfig.versionName})"
+                else
+                  "App APK Update (${apkUpdateConfig.versionName})",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 14.sp,
+                color = Color(0xFF065F46)
+              )
+              Text(
+                text = if (isBangla)
+                  "নতুন APK রিলিজ, ভার্সন ও ডাউনলোড লিংক নিয়ন্ত্রণ করুন"
+                else
+                  "Manage APK version, release notes & download URL",
+                fontSize = 11.sp,
+                color = Color(0xFF047857)
+              )
+            }
+          }
+
+          Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilledTonalButton(
+              onClick = { selectedTab = 3 },
+              shape = RoundedCornerShape(10.dp),
+              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+              modifier = Modifier.height(34.dp)
+            ) {
+              Text(
+                text = if (isBangla) "কন্ট্রোল" else "Manage",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+              )
+            }
+            Button(
+              onClick = onTriggerApkUpdatePopup,
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A64)),
+              shape = RoundedCornerShape(10.dp),
+              contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+              modifier = Modifier
+                .height(34.dp)
+                .testTag("admin_quick_apk_popup_btn")
+            ) {
+              Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+              Spacer(modifier = Modifier.width(4.dp))
+              Text(
+                text = if (isBangla) "APK আপডেট" else "APK Update",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+        }
+      }
+    }
+
     // 3. Modern Navigation Tabs for Admin & User Panel
     item(key = "dashboard_tabs") {
       val tabs = listOf(
         0 to (if (isBangla) "পোস্ট এডিট ও ম্যানেজ (${allProducts.size})" else "Manage Posts (${allProducts.size})"),
         1 to (if (isBangla) "ইউজার ম্যানেজ (${managedUsers.size})" else "Manage Users (${managedUsers.size})"),
         2 to (if (isBangla) "আমার ও সেভ করা (${myPostedAds.size + savedAds.size})" else "My & Saved Ads"),
-        3 to (if (isBangla) "এডমোব ও পপআপ" else "AdMob & Popup")
+        3 to (if (isBangla) "APK আপডেট ও এডমোব" else "APK Update & AdMob")
       )
 
       LazyRow(
@@ -379,7 +481,7 @@ fun UserDashboardScreen(
                 0 -> Icons.Default.EditNote
                 1 -> Icons.Default.ManageAccounts
                 2 -> Icons.Default.Bookmarks
-                else -> Icons.Default.Campaign
+                else -> Icons.Default.SystemUpdate
               }
               Icon(
                 imageVector = tabIcon,
@@ -649,8 +751,198 @@ fun UserDashboardScreen(
       }
     }
 
-    // 7. Tab 3: এডমোব ও পপআপ সেটিংস (AdMob Ads & Startup Safety Popup Control)
+    // 7. Tab 3: APK আপডেট কন্ট্রোল, এডমোব ও পপআপ সেটিংস (APK Update Manager, AdMob & Safety Popup Control)
     if (selectedTab == 3) {
+      item(key = "apk_update_manager_card") {
+        Card(
+          shape = RoundedCornerShape(18.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("admin_apk_update_manager_card")
+        ) {
+          Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = Color(0xFF007A64))
+                Column {
+                  Text(
+                    text = if (isBangla) "অ্যাপ APK আপডেট ও রিলিজ ম্যানেজার" else "App APK Update & Release Manager",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    color = Color(0xFF0F172A)
+                  )
+                  Text(
+                    text = if (isBangla)
+                      "বর্তমান ভার্সন: ${apkUpdateConfig.versionName} • ${apkUpdateConfig.apkSizeMb}"
+                    else
+                      "Current Version: ${apkUpdateConfig.versionName} • ${apkUpdateConfig.apkSizeMb}",
+                    fontSize = 12.sp,
+                    color = Color(0xFF059669),
+                    fontWeight = FontWeight.Bold
+                  )
+                }
+              }
+
+              Surface(
+                color = Color(0xFFDCFCE7),
+                shape = RoundedCornerShape(50)
+              ) {
+                Text(
+                  text = "LIVE APK",
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.ExtraBold,
+                  color = Color(0xFF166534),
+                  modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+              }
+            }
+
+            apkSaveSuccessMsg?.let { msg ->
+              Surface(
+                color = Color(0xFFECFDF5),
+                border = BorderStroke(1.dp, Color(0xFF6EE7B7)),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+              ) {
+                Text(
+                  text = msg,
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFF065F46),
+                  modifier = Modifier.padding(10.dp)
+                )
+              }
+            }
+
+            OutlinedTextField(
+              value = editApkVersion,
+              onValueChange = { editApkVersion = it },
+              label = { Text(if (isBangla) "APK ভার্সন নাম (Version Name)" else "APK Version Name") },
+              singleLine = true,
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("admin_apk_version_input")
+            )
+
+            OutlinedTextField(
+              value = editApkUrl,
+              onValueChange = { editApkUrl = it },
+              label = { Text(if (isBangla) "ডিরেক্ট APK ডাউনলোড লিংক (APK URL)" else "Direct APK Download URL") },
+              singleLine = true,
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("admin_apk_url_input")
+            )
+
+            OutlinedTextField(
+              value = editApkNotes,
+              onValueChange = { editApkNotes = it },
+              label = { Text(if (isBangla) "হোয়াটস নিউ / আপডেট নোট (Release Notes)" else "Release Notes / What's New") },
+              minLines = 3,
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("admin_apk_notes_input")
+            )
+
+            Surface(
+              color = Color(0xFFF8FAFC),
+              shape = RoundedCornerShape(12.dp),
+              border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Row(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Column {
+                  Text(
+                    text = if (isBangla) "বাধ্যতামূলক আপডেট (Force Update)" else "Mandatory Force Update",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = Color(0xFF0F172A)
+                  )
+                  Text(
+                    text = if (isBangla) "চালু থাকলে ইউজারকে অবশ্যই নতুন APK ডাউনলোড করতে হবে" else "Users must update before continuing",
+                    fontSize = 11.sp,
+                    color = Color(0xFF64748B)
+                  )
+                }
+                Switch(
+                  checked = editForceUpdate,
+                  onCheckedChange = { editForceUpdate = it }
+                )
+              }
+            }
+
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Button(
+                onClick = {
+                  val cleanVersion = editApkVersion.ifBlank { "v2.5.0" }
+                  onUpdateApkConfig(
+                    apkUpdateConfig.copy(
+                      versionName = cleanVersion,
+                      apkFileName = "RecycleBinRangpur_${cleanVersion}.apk",
+                      downloadUrl = editApkUrl.ifBlank { apkUpdateConfig.downloadUrl },
+                      releaseNotesBn = editApkNotes.ifBlank { apkUpdateConfig.releaseNotesBn },
+                      isForceUpdate = editForceUpdate,
+                      isUpdateAvailable = true
+                    )
+                  )
+                  apkSaveSuccessMsg = if (isBangla) {
+                    "✓ নতুন APK আপডেট ($cleanVersion) সফলভাবে পাবলিশ করা হয়েছে!"
+                  } else {
+                    "✓ APK Update ($cleanVersion) published successfully!"
+                  }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A64)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                  .weight(1f)
+                  .testTag("admin_publish_apk_update_btn")
+              ) {
+                Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                  text = if (isBangla) "APK আপডেট সেভ করুন" else "Publish APK Update",
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold
+                )
+              }
+
+              OutlinedButton(
+                onClick = onTriggerApkUpdatePopup,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                  .weight(1f)
+                  .testTag("admin_preview_apk_popup_btn")
+              ) {
+                Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                  text = if (isBangla) "APK পপআপ দেখুন" else "Show APK Popup",
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold
+                )
+              }
+            }
+          }
+        }
+      }
+
       item(key = "admob_control_card") {
         Card(
           shape = RoundedCornerShape(18.dp),

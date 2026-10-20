@@ -97,6 +97,10 @@ fun RecyclRangpurApp() {
   // Admin Panel Mode inside Dashboard
   var isAdminPanelActive by remember { mutableStateOf(true) }
 
+  // APK Update Configuration & Popup State controlled by Admin Panel
+  var apkUpdateConfig by remember { mutableStateOf(ApkUpdateConfig()) }
+  var showApkUpdatePopup by remember { mutableStateOf(false) }
+
   // Managed Platform Users for Admin User Management Panel
   var managedUsers by remember { mutableStateOf(INITIAL_PLATFORM_USERS) }
 
@@ -741,6 +745,11 @@ fun RecyclRangpurApp() {
               },
               onTriggerAppOpenAd = { showAppOpenAdModal = true },
               onTriggerSafetyPopup = { showStartupSafetyPopup = true },
+              apkUpdateConfig = apkUpdateConfig,
+              onUpdateApkConfig = { newConfig ->
+                apkUpdateConfig = newConfig
+              },
+              onTriggerApkUpdatePopup = { showApkUpdatePopup = true },
               onLogoutClick = {
                 authManager.signOut()
                 currentScreen = AppScreen.HOME
@@ -848,6 +857,15 @@ fun RecyclRangpurApp() {
       isBangla = isBangla,
       onDismiss = { showStartupSafetyPopup = false }
     )
+
+    // In-App APK Update Popup Dialog controlled from Admin Panel
+    if (showApkUpdatePopup) {
+      ApkUpdatePopupDialog(
+        apkConfig = apkUpdateConfig,
+        isBangla = isBangla,
+        onDismiss = { showApkUpdatePopup = false }
+      )
+    }
 
     // Animated Startup Preloader Overlay
     AnimatedVisibility(

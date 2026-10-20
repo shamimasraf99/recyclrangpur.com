@@ -1,5 +1,7 @@
 package com.example
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -17,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -652,3 +655,169 @@ fun AdMobNativeAdBar(
     )
   }
 }
+
+/**
+ * In-App APK Update Popup Dialog controlled from Admin Panel
+ */
+@Composable
+fun ApkUpdatePopupDialog(
+  apkConfig: ApkUpdateConfig,
+  isBangla: Boolean,
+  onDismiss: () -> Unit
+) {
+  val context = LocalContext.current
+
+  Dialog(
+    onDismissRequest = {
+      if (!apkConfig.isForceUpdate) onDismiss()
+    },
+    properties = DialogProperties(
+      dismissOnBackPress = !apkConfig.isForceUpdate,
+      dismissOnClickOutside = !apkConfig.isForceUpdate,
+      usePlatformDefaultWidth = false
+    )
+  ) {
+    Card(
+      shape = RoundedCornerShape(24.dp),
+      colors = CardDefaults.cardColors(containerColor = Color.White),
+      elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+      modifier = Modifier
+        .fillMaxWidth(0.92f)
+        .testTag("apk_update_popup_dialog")
+    ) {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        // Header Banner
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .background(
+              Brush.linearGradient(
+                listOf(Color(0xFF007A64), Color(0xFF0F172A))
+              )
+            )
+            .padding(20.dp)
+        ) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            Box(
+              modifier = Modifier
+                .size(54.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFD166)),
+              contentAlignment = Alignment.Center
+            ) {
+              Icon(
+                imageVector = Icons.Default.SystemUpdate,
+                contentDescription = null,
+                tint = Color(0xFF0F172A),
+                modifier = Modifier.size(30.dp)
+              )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              Surface(
+                color = Color(0xFFFFD166),
+                shape = RoundedCornerShape(50)
+              ) {
+                Text(
+                  text = if (apkConfig.isForceUpdate) {
+                    if (isBangla) "বাধ্যতামূলক APK আপডেট" else "MANDATORY UPDATE"
+                  } else {
+                    if (isBangla) "নতুন অফিশিয়াল APK রিলিজ" else "NEW APK UPDATE"
+                  },
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.ExtraBold,
+                  color = Color(0xFF0F172A),
+                  modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                )
+              }
+
+              Text(
+                text = if (isBangla)
+                  "Recycle Bin Rangpur ${apkConfig.versionName}"
+                else
+                  "Update to ${apkConfig.versionName}",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                color = Color.White
+              )
+
+              Text(
+                text = "${apkConfig.apkFileName} • ${apkConfig.apkSizeMb}",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.85f)
+              )
+            }
+          }
+        }
+
+        // Body & Release Notes
+        Column(
+          modifier = Modifier.padding(20.dp),
+          verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+          Text(
+            text = if (isBangla) "এই নতুন APK আপডেটে যা যা থাকছে:" else "What's New in this APK Update:",
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 14.sp,
+            color = Color(0xFF0F172A)
+          )
+
+          Surface(
+            color = Color(0xFFF0FDF4),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, Color(0xFFBBF7D0)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text(
+              text = if (isBangla) apkConfig.releaseNotesBn else apkConfig.releaseNotesEn,
+              fontSize = 13.sp,
+              color = Color(0xFF166534),
+              lineHeight = 20.sp,
+              modifier = Modifier.padding(14.dp)
+            )
+          }
+
+          Button(
+            onClick = {
+              runCatching {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(apkConfig.downloadUrl))
+                context.startActivity(intent)
+              }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007A64)),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(48.dp)
+              .testTag("download_apk_update_button")
+          ) {
+            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+              text = if (isBangla) "এখনই নতুন APK ডাউনলোড করুন" else "Download Latest APK Now",
+              fontWeight = FontWeight.ExtraBold,
+              fontSize = 14.sp
+            )
+          }
+
+          if (!apkConfig.isForceUpdate) {
+            TextButton(
+              onClick = onDismiss,
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Text(
+                text = if (isBangla) "পরে আপডেট করব" else "Remind Me Later",
+                color = Color(0xFF64748B),
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -550,3 +550,17 @@ val INITIAL_PLATFORM_USERS = listOf(
   )
 )
 
+data class ApkUpdateConfig(
+  val versionName: String = "v2.5.0",
+  val versionCode: Int = 25,
+  val apkFileName: String = "RecycleBinRangpur_v2.5.0.apk",
+  val apkSizeMb: String = "14.8 MB",
+  val downloadUrl: String = "https://ais-pre-j37wapjjolbqorxxjjqvyq-926583726952.asia-southeast1.run.app/RecycleBinRangpur.apk",
+  val releaseNotesBn: String = "• আধুনিক অ্যাডমিন ও ইউজার কন্ট্রোল প্যানেল যুক্ত হয়েছে\n• ক্যাটাগরি ৮টি ও See More (আরও দেখুন) বাটন যুক্ত হয়েছে\n• ফুল-পেজ ই-কমার্স প্রোডাক্ট ভিউ ও নিরাপত্তা পপআপ যুক্ত হয়েছে\n• গুগল এডমোব (AdMob) ও পোস্ট এডিট সিস্টেম উন্নত করা হয়েছে",
+  val releaseNotesEn: String = "• Added Modern Admin & User Control Panel\n• 8-Category Grid with See More expansion\n• Full E-Commerce Product Detail Page & Safety Notice\n• Enhanced Google AdMob & Post Edit Controls",
+  val isForceUpdate: Boolean = false,
+  val isUpdateAvailable: Boolean = true,
+  val lastUpdatedBn: String = "আজ আপডেট করা হয়েছে"
+)
+
+
