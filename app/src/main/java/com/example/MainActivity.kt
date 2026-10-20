@@ -75,18 +75,50 @@ fun RecyclRangpurApp() {
     }
   }
 
-  // Preloader state: show animated preloader on launch for 1.2 seconds
+  // Preloader state: show animated preloader on launch for 900ms
   var showPreloader by remember { mutableStateOf(true) }
+  // Startup Safety Warning Popup: opens immediately when the app opens!
+  var showStartupSafetyPopup by remember { mutableStateOf(true) }
+  // AdMob App Open Ad Modal state
+  var showAppOpenAdModal by remember { mutableStateOf(false) }
+
   LaunchedEffect(Unit) {
-    delay(1200L)
+    delay(900L)
     showPreloader = false
   }
 
   // Navigation State
   var currentScreen by remember { mutableStateOf(AppScreen.HOME) }
   var previousScreenBeforeDetail by remember { mutableStateOf(AppScreen.HOME) }
+  var previousScreenBeforePostAd by remember { mutableStateOf(AppScreen.HOME) }
   var productToEdit by remember { mutableStateOf<MarketProduct?>(null) }
   var selectedProductForDetail by remember { mutableStateOf<MarketProduct?>(null) }
+
+  // Admin Panel Mode inside Dashboard
+  var isAdminPanelActive by remember { mutableStateOf(true) }
+
+  // Managed Platform Users for Admin User Management Panel
+  var managedUsers by remember { mutableStateOf(INITIAL_PLATFORM_USERS) }
+
+  // Sync current logged-in user into managedUsers list
+  LaunchedEffect(currentUser) {
+    val u = currentUser
+    if (u != null && managedUsers.none { it.email.equals(u.email, ignoreCase = true) || it.uid == u.uid }) {
+      val newManaged = ManagedPlatformUser(
+        uid = u.uid,
+        name = u.displayName,
+        email = u.email,
+        phone = u.phone ?: "01711223344",
+        areaBn = "রংপুর শহর",
+        role = if (u.email.equals(ADMIN_EMAIL, ignoreCase = true)) "Admin" else "Verified Seller",
+        isVerified = true,
+        isBlocked = false,
+        adsCount = 1,
+        joinedAgoBn = "সক্রিয় ইউজার"
+      )
+      managedUsers = listOf(newManaged) + managedUsers
+    }
+  }
 
   // Ensure Profile Dashboard is never shown when logged out
   LaunchedEffect(currentUser, currentScreen) {
@@ -190,27 +222,29 @@ fun RecyclRangpurApp() {
   }
 
   // Helper to open Post Ad (with guest auth gate AND strict ownership/admin check for edits)
-  fun handleStartPostAd(editTarget: MarketProduct? = null) {
+  fun handleStartPostAd(editTarget: MarketProduct? = null, allowAdminOverride: Boolean = false) {
     if (currentUser == null) {
       pendingActionAfterAuth = {
-        if (editTarget == null || canUserModifyProduct(editTarget, currentUser)) {
+        if (editTarget == null || canUserModifyProduct(editTarget, currentUser, allowAdminOverride)) {
+          previousScreenBeforePostAd = currentScreen
           productToEdit = editTarget
           currentScreen = AppScreen.POST_AD
         }
       }
       showAuthModal = true
     } else {
-      if (editTarget != null && !canUserModifyProduct(editTarget, currentUser)) {
+      if (editTarget != null && !canUserModifyProduct(editTarget, currentUser, allowAdminOverride)) {
         return
       }
+      previousScreenBeforePostAd = currentScreen
       productToEdit = editTarget
       currentScreen = AppScreen.POST_AD
     }
   }
 
   // Helper to delete a product (only owner or admin)
-  fun handleDeleteProduct(target: MarketProduct) {
-    if (!canUserModifyProduct(target, currentUser)) return
+  fun handleDeleteProduct(target: MarketProduct, allowAdminOverride: Boolean = false) {
+    if (!canUserModifyProduct(target, currentUser, allowAdminOverride)) return
     allProducts = allProducts.filter { it.id != target.id }
     if (selectedProductForDetail?.id == target.id) {
       selectedProductForDetail = null
@@ -307,7 +341,7 @@ fun RecyclRangpurApp() {
               modifier = Modifier.testTag("nav_post_ad_tab")
             )
 
-            // Before login: show Login button (no Panel). After login: hide Login button and show User Panel / Profile!
+            // Before login: show Login button (no Panel). After login: hide Login button and show User/Admin Panel!
             if (currentUser == null) {
               NavigationBarItem(
                 selected = false,
@@ -341,8 +375,8 @@ fun RecyclRangpurApp() {
                 onClick = { currentScreen = AppScreen.PROFILE_DASHBOARD },
                 icon = {
                   Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Panel"
+                    imageVector = Icons.Default.AdminPanelSettings,
+                    contentDescription = "User & Admin Panel"
                   )
                 },
                 label = {
@@ -495,7 +529,7 @@ fun RecyclRangpurApp() {
                 )
               }
 
-              // Google AdMob Native Ad Bar
+              // Google AdMob Native Ad Bar (Live Rotating)
               item(key = "admob_native_bar") {
                 AdMobNativeAdBar(isBangla = isBangla)
               }
@@ -643,10 +677,18 @@ fun RecyclRangpurApp() {
                 if (selectedProductForDetail?.id == stampedProduct.id) {
                   selectedProductForDetail = stampedProduct
                 }
-                currentScreen = AppScreen.HOME
+                currentScreen = if (previousScreenBeforePostAd == AppScreen.PROFILE_DASHBOARD && currentUser != null) {
+                  AppScreen.PROFILE_DASHBOARD
+                } else {
+                  AppScreen.HOME
+                }
               },
               onCancel = {
-                currentScreen = AppScreen.HOME
+                currentScreen = if (previousScreenBeforePostAd == AppScreen.PROFILE_DASHBOARD && currentUser != null) {
+                  AppScreen.PROFILE_DASHBOARD
+                } else {
+                  AppScreen.HOME
+                }
               }
             )
           }
@@ -655,11 +697,19 @@ fun RecyclRangpurApp() {
             UserDashboardScreen(
               isBangla = isBangla,
               currentUser = currentUser,
+              isAdminPanelActive = isAdminPanelActive,
+              onToggleAdminPanelMode = { isAdminPanelActive = it },
               allProducts = allProducts,
+              managedUsers = managedUsers,
               savedProductIds = activeSavedIds,
               onPostNewAd = { handleStartPostAd(null) },
-              onEditProduct = { product -> handleStartPostAd(product) },
-              onDeleteProduct = { product -> handleDeleteProduct(product) },
+              onEditProduct = { product -> handleStartPostAd(product, allowAdminOverride = isAdminPanelActive) },
+              onDeleteProduct = { product -> handleDeleteProduct(product, allowAdminOverride = isAdminPanelActive) },
+              onToggleFeaturedProduct = { product ->
+                allProducts = allProducts.map {
+                  if (it.id == product.id) it.copy(isFeatured = !it.isFeatured) else it
+                }
+              },
               onProductClick = { product -> openProductDetailPage(product) },
               onToggleSave = { product ->
                 val isSaved = activeSavedIds.contains(product.id)
@@ -668,10 +718,29 @@ fun RecyclRangpurApp() {
                   viewModel.toggleSavedProduct(product, isSaved)
                 }
               },
-              onLoginClick = {
-                pendingActionAfterAuth = null
-                showAuthModal = true
+              onAddOrUpdateUser = { updatedUser ->
+                val exists = managedUsers.any { it.uid == updatedUser.uid }
+                managedUsers = if (exists) {
+                  managedUsers.map { if (it.uid == updatedUser.uid) updatedUser else it }
+                } else {
+                  listOf(updatedUser) + managedUsers
+                }
               },
+              onToggleVerifyUser = { targetUser ->
+                managedUsers = managedUsers.map {
+                  if (it.uid == targetUser.uid) it.copy(isVerified = !it.isVerified) else it
+                }
+              },
+              onToggleBlockUser = { targetUser ->
+                managedUsers = managedUsers.map {
+                  if (it.uid == targetUser.uid) it.copy(isBlocked = !it.isBlocked) else it
+                }
+              },
+              onDeleteUser = { targetUser ->
+                managedUsers = managedUsers.filter { it.uid != targetUser.uid }
+              },
+              onTriggerAppOpenAd = { showAppOpenAdModal = true },
+              onTriggerSafetyPopup = { showStartupSafetyPopup = true },
               onLogoutClick = {
                 authManager.signOut()
                 currentScreen = AppScreen.HOME
@@ -764,6 +833,20 @@ fun RecyclRangpurApp() {
         showAuthModal = false
         pendingActionAfterAuth = null
       }
+    )
+
+    // AdMob App Open Ad Overlay
+    AdMobAppOpenAdModal(
+      isOpen = showAppOpenAdModal,
+      isBangla = isBangla,
+      onDismiss = { showAppOpenAdModal = false }
+    )
+
+    // Startup Safety Warning Popup (“অগ্রমী লেনদেন করা থেকে বিরত থাকুন” / “সরাসরি দেখা করে পণ্য ক্রয় -বিক্রয় করুন ।”)
+    SafetyNoticeStartupPopup(
+      isOpen = showStartupSafetyPopup && !showPreloader,
+      isBangla = isBangla,
+      onDismiss = { showStartupSafetyPopup = false }
     )
 
     // Animated Startup Preloader Overlay
@@ -998,7 +1081,8 @@ fun BikroyStyleHeader(
 }
 
 /**
- * Neat, organized Bikroy-style Category Grid with all categories including Pets, Clothing, Cosmetics, Food, and Others.
+ * Neat, organized Bikroy-style Category Grid that shows 8 categories initially
+ * and hides the remaining categories behind a "See More / আরও দেখুন" button.
  */
 @Composable
 fun BikroyCategoryGrid(
@@ -1006,6 +1090,15 @@ fun BikroyCategoryGrid(
   selectedCategoryIdx: Int,
   onSelectCategory: (Int) -> Unit
 ) {
+  var showAllCategories by remember { mutableStateOf(false) }
+  val initialVisibleCount = 8
+  val hiddenCount = (BIKROY_CATEGORY_LIST.size - initialVisibleCount).coerceAtLeast(0)
+  val visibleCategories = if (showAllCategories) {
+    BIKROY_CATEGORY_LIST
+  } else {
+    BIKROY_CATEGORY_LIST.take(initialVisibleCount)
+  }
+
   Card(
     modifier = Modifier
       .fillMaxWidth()
@@ -1023,22 +1116,43 @@ fun BikroyCategoryGrid(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Text(
-          text = if (isBangla) "ক্যাটাগরি সমূহ" else "All Categories",
+          text = if (isBangla) "ক্যাটাগরি সমূহ" else "Browse Categories",
           fontWeight = FontWeight.Bold,
           fontSize = 15.sp,
           color = Color(0xFF1E293B)
         )
-        Text(
-          text = if (isBangla) "${BIKROY_CATEGORY_LIST.size - 1}টি বিভাগ" else "${BIKROY_CATEGORY_LIST.size - 1} Categories",
-          fontSize = 11.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = Color(0xFF007A64)
-        )
+        if (hiddenCount > 0) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+              .clip(RoundedCornerShape(8.dp))
+              .clickable { showAllCategories = !showAllCategories }
+              .padding(horizontal = 6.dp, vertical = 2.dp)
+          ) {
+            Text(
+              text = if (showAllCategories) {
+                if (isBangla) "কম দেখুন" else "See Less"
+              } else {
+                if (isBangla) "আরও দেখুন (+$hiddenCount)" else "See More (+$hiddenCount)"
+              },
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF007A64)
+            )
+            Icon(
+              imageVector = if (showAllCategories) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+              contentDescription = null,
+              tint = Color(0xFF007A64),
+              modifier = Modifier.size(16.dp)
+            )
+          }
+        }
       }
 
-      // 4-column responsive grid for all 11 category tiles
+      // 4-column responsive grid (2 rows = 8 categories by default)
       val columns = 4
-      val rows = BIKROY_CATEGORY_LIST.chunked(columns)
+      val rows = visibleCategories.chunked(columns)
       for (rowItems in rows) {
         Row(
           modifier = Modifier
@@ -1059,6 +1173,46 @@ fun BikroyCategoryGrid(
           val remaining = columns - rowItems.size
           repeat(remaining) {
             Spacer(modifier = Modifier.weight(1f))
+          }
+        }
+      }
+
+      // Prominent "See More / আরও দেখুন" toggle bar below the 8 categories
+      if (hiddenCount > 0) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Surface(
+          shape = RoundedCornerShape(10.dp),
+          color = Color(0xFFF0FDF4),
+          modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFF007A64).copy(alpha = 0.22f), RoundedCornerShape(10.dp))
+            .clickable { showAllCategories = !showAllCategories }
+            .testTag("category_see_more_button")
+        ) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 8.dp, horizontal = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text(
+              text = if (showAllCategories) {
+                if (isBangla) "কম ক্যাটাগরি দেখুন (See Less)" else "Show Fewer Categories (See Less)"
+              } else {
+                if (isBangla) "আরও দেখুন • বাকি ${hiddenCount}টি ক্যাটাগরি (See More)" else "See More Categories (+$hiddenCount)"
+              },
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF007A64)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+              imageVector = if (showAllCategories) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+              contentDescription = null,
+              tint = Color(0xFF007A64),
+              modifier = Modifier.size(18.dp)
+            )
           }
         }
       }

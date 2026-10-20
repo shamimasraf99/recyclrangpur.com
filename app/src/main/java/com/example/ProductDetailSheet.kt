@@ -858,6 +858,11 @@ fun ProductDetailScreen(
         }
       }
 
+      // 4.5 Live AdMob Native Ad Bar on Product Page
+      item(key = "ecommerce_detail_admob_bar") {
+        AdMobNativeAdBar(isBangla = isBangla)
+      }
+
       // 5. Similar Products Section (E-Commerce Recommended Row)
       if (similarProducts.isNotEmpty()) {
         item(key = "ecommerce_similar_products") {

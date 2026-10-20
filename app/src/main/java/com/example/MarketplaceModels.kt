@@ -121,12 +121,13 @@ data class MarketProduct(
   val ownerEmail: String = ""
 )
 
-/**
- * Checks whether [user] is allowed to edit or delete [product].
- * Only the original creator of the listing or the platform Admin can edit/delete.
- */
-fun canUserModifyProduct(product: MarketProduct, user: AuthenticatedUser?): Boolean {
+fun canUserModifyProduct(
+  product: MarketProduct,
+  user: AuthenticatedUser?,
+  isAdminOverride: Boolean = false
+): Boolean {
   if (user == null) return false
+  if (isAdminOverride) return true
   if (user.email.equals(ADMIN_EMAIL, ignoreCase = true)) return true
   if (product.ownerUid.isNotBlank() && product.ownerUid == user.uid) return true
   if (product.ownerEmail.isNotBlank() && product.ownerEmail.equals(user.email, ignoreCase = true)) return true
@@ -448,3 +449,104 @@ val SAMPLE_PRODUCTS = listOf(
     ownerEmail = "sohel.rangpur@example.com"
   )
 )
+
+data class ManagedPlatformUser(
+  val uid: String,
+  val name: String,
+  val email: String,
+  val phone: String,
+  val areaBn: String = "জাহাজ কোম্পানি মোড়, রংপুর",
+  val role: String = "Verified Seller", // "Admin", "Verified Seller", "User"
+  val isVerified: Boolean = true,
+  val isBlocked: Boolean = false,
+  val adsCount: Int = 1,
+  val joinedAgoBn: String = "সক্রিয় সদস্য"
+)
+
+val INITIAL_PLATFORM_USERS = listOf(
+  ManagedPlatformUser(
+    uid = "admin_shamim_0",
+    name = "মোঃ শামীম আশরাফ (অ্যাডমিন)",
+    email = ADMIN_EMAIL,
+    phone = "01700000000",
+    areaBn = "রংপুর সদর, রংপুর শহর",
+    role = "Admin",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 10,
+    joinedAgoBn = "প্রধান অ্যাডমিন"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_ariful_1",
+    name = "মোঃ আরিফুল ইসলাম",
+    email = "ariful.rangpur@example.com",
+    phone = "01712345678",
+    areaBn = "জাহাজ কোম্পানি মোড়",
+    role = "Verified Seller",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 3,
+    joinedAgoBn = "৬ মাস আগে"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_kamrul_2",
+    name = "ডাঃ কামরুল হাসান",
+    email = "kamrul.rangpur@example.com",
+    phone = "01819876543",
+    areaBn = "ধাপ মেডিকেল মোড়",
+    role = "Verified Seller",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 2,
+    joinedAgoBn = "৪ মাস আগে"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_tanvir_3",
+    name = "তানভীর আহমেদ",
+    email = "tanvir.rangpur@example.com",
+    phone = "01911223344",
+    areaBn = "লালবাগ ও পার্ক মোড়",
+    role = "Verified Seller",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 2,
+    joinedAgoBn = "৩ মাস আগে"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_nusrat_7",
+    name = "নুসরাত জাহান",
+    email = "nusrat.rangpur@example.com",
+    phone = "01755443322",
+    areaBn = "ধাপ মেডিকেল মোড়",
+    role = "Verified Seller",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 1,
+    joinedAgoBn = "২ মাস আগে"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_imran_8",
+    name = "ইমরান হোসেন",
+    email = "imran.rangpur@example.com",
+    phone = "01788990011",
+    areaBn = "জাহাজ কোম্পানি মোড়",
+    role = "User",
+    isVerified = false,
+    isBlocked = false,
+    adsCount = 1,
+    joinedAgoBn = "১ মাস আগে"
+  ),
+  ManagedPlatformUser(
+    uid = "seller_karim_10",
+    name = "হাজী আব্দুল করিম",
+    email = "karim.rangpur@example.com",
+    phone = "01766554433",
+    areaBn = "কাচারী বাজার",
+    role = "Verified Seller",
+    isVerified = true,
+    isBlocked = false,
+    adsCount = 4,
+    joinedAgoBn = "৮ মাস আগে"
+  )
+)
+
